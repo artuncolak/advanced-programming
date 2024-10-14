@@ -10,6 +10,7 @@ type terminal =
     | Sub
     | Mul
     | Div
+    | Mod
     | Lpar
     | Rpar
     | Num of int
@@ -32,6 +33,7 @@ let lexer input =
         | [] -> []
         | '+' :: tail -> Add :: scan tail
         | '-' :: tail -> Sub :: scan tail
+        | '%' :: tail -> Mod :: scan tail
         | '*' :: tail -> Mul :: scan tail
         | '/' :: tail -> Div :: scan tail
         | '(' :: tail -> Lpar :: scan tail
@@ -52,7 +54,7 @@ let getInputString () : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList =
@@ -70,6 +72,7 @@ let parser tList =
         match tList with
         | Mul :: tail -> (NR >> Topt) tail
         | Div :: tail -> (NR >> Topt) tail
+        | Mod :: tail -> (NR >> Topt) tail
         | _ -> tList
 
     and NR tList =
@@ -106,6 +109,9 @@ let parseNeval tList =
         | Div :: tail ->
             let (tLst, tval) = NR tail
             Topt(tLst, value / tval)
+        | Mod :: tail ->
+            let (tLst, tval) = NR tail
+            Topt(tLst, value % tval)
         | _ -> (tList, value)
 
     and NR tList =
