@@ -10,6 +10,7 @@ type terminal =
     | Sub
     | Mul
     | Div
+    | Pow
     | Lpar
     | Rpar
     | Num of int
@@ -34,6 +35,7 @@ let lexer input =
         | '-' :: tail -> Sub :: scan tail
         | '*' :: tail -> Mul :: scan tail
         | '/' :: tail -> Div :: scan tail
+        | '^' :: tail -> Pow :: scan tail
         | '(' :: tail -> Lpar :: scan tail
         | ')' :: tail -> Rpar :: scan tail
         | c :: tail when isblank c -> scan tail
@@ -51,8 +53,10 @@ let getInputString () : string =
 // Grammar in BNF:
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
-// <T>        ::= <NR> <Topt>
+// <T>        ::= <NR> <Topt> | <NR> 
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
+// <P>        ::= <NR> <Popt> | <NR>
+// <Popt>     ::= "^" <NR> <Popt> | <empty>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList =
@@ -64,12 +68,19 @@ let parser tList =
         | Sub :: tail -> (T >> Eopt) tail
         | _ -> tList
 
-    and T tList = (NR >> Topt) tList
+    and T tList = (P >> Topt) tList
 
     and Topt tList =
         match tList with
-        | Mul :: tail -> (NR >> Topt) tail
-        | Div :: tail -> (NR >> Topt) tail
+        | Mul :: tail -> (P >> Topt) tail
+        | Div :: tail -> (P >> Topt) tail
+        | _ -> tList
+
+    and P tList = (NR >> Popt) tList
+
+    and Popt tList =
+        match tList with
+        | Pow :: tail -> (NR >> Popt) tail
         | _ -> tList
 
     and NR tList =
@@ -96,17 +107,26 @@ let parseNeval tList =
             Eopt(tLst, value - tval)
         | _ -> (tList, value)
 
-    and T tList = (NR >> Topt) tList
+    and T tList = (P >> Topt) tList
 
     and Topt (tList, value) =
         match tList with
-        | Mul :: tail ->
-            let (tLst, tval) = NR tail
-            Topt(tLst, value * tval)
-        | Div :: tail ->
-            let (tLst, tval) = NR tail
-            Topt(tLst, value / tval)
-        | _ -> (tList, value)
+            | Mul :: tail ->
+              let (tLst, tval) = P tail
+              Topt(tLst, value * tval)
+            | Div :: tail ->
+              let (tLst, tval) = P tail
+              Topt(tLst, value / tval)
+            | _ -> (tList, value)
+
+    and P tList = (NR >> Popt) tList
+
+    and Popt (tList, value) =
+        match tList with
+            | Pow :: tail ->
+                let (tLst, tval) = NR tail
+                Popt(tLst, int (float value ** float tval))
+            | _ -> (tList, value)
 
     and NR tList =
         match tList with
