@@ -85,11 +85,7 @@ let parser tList =
     and Popt tList =
         match tList with
         | Pow :: tail -> (NR >> Popt) tail
-
-    and F tList =
-        match tList with
-        | Sub :: tail -> NR tail
-        | _ -> NR tList
+        | _ -> tList
 
     and NR tList =
         match tList with
@@ -139,13 +135,6 @@ let parseNeval tList =
             Popt(tLst, int (float value ** float tval))
         | _ -> (tList, value)
 
-    and F tList =
-        match tList with
-        | Sub :: tail ->
-            let (tLst, tval) = NR tail
-            (tLst, tval * -1)
-        | _ -> NR tList
-
     and NR tList =
         match tList with
         | Num value :: tail -> (tail, value)
@@ -172,11 +161,16 @@ let rec printTList (lst: list<terminal>) : list<string> =
 
 [<EntryPoint>]
 let main argv =
-    Console.WriteLine("Simple Interpreter")
-    let input: string = getInputString ()
-    let oList = lexer input
-    let sList = printTList oList
-    let pList = printTList (parser oList)
-    let Out = parseNeval oList
-    Console.WriteLine("Result = {0}", snd Out)
+    try
+        Console.WriteLine("Simple Interpreter")
+        let input: string = getInputString ()
+        let oList = lexer input
+        let sList = printTList oList
+        let pList = printTList (parser oList)
+        let Out = parseNeval oList
+        Console.WriteLine("Result = {0}", snd Out)
+    with
+    | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
+    | _ -> reraise ()
+
     0
