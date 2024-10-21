@@ -49,7 +49,7 @@ let lexer input =
     scan (str2lst input)
 
 let getInputString () : string =
-    Console.Write("Enter an expression: ")
+    // Console.Write("Enter an expression: ")
     Console.ReadLine()
 
 // Grammar in BNF:
@@ -162,13 +162,13 @@ let rec printTList (lst: list<terminal>) : list<string> =
 [<EntryPoint>]
 let main argv =
     try
-        Console.WriteLine("Simple Interpreter")
+        // Console.WriteLine("Simple Interpreter")
         let input: string = getInputString ()
         let oList = lexer input
-        let sList = printTList oList
-        let pList = printTList (parser oList)
+        // let sList = printTList oList
+        // let pList = printTList (parser oList)
         let Out = parseNeval oList
-        Console.WriteLine("Result = {0}", snd Out)
+        Console.WriteLine(snd Out)
     with
     | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
     | _ -> reraise ()
