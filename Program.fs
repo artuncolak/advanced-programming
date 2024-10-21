@@ -56,8 +56,8 @@ let getInputString () : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
-// <F>        ::= 
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
+// <F>        ::= "-" <NR> | "^" <NR> | <NR>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList =
@@ -75,13 +75,12 @@ let parser tList =
         match tList with
         | Mul :: tail -> (NR >> Topt) tail
         | Div :: tail -> (NR >> Topt) tail
-        | Pow :: tail -> (NR >> Topt) tail
         | Mod :: tail -> (NR >> Topt) tail
         | _ -> tList
 
     and F tList =
         match tList with
-        | Sub :: tail -> NR tail  // Handle unary minus
+        | Sub :: tail -> NR tail
         | _ -> NR tList
 
     and NR tList =
@@ -115,9 +114,6 @@ let parseNeval tList =
         | Mul :: tail ->
             let (tLst, tval) = NR tail
             Topt(tLst, value * tval)
-        | Pow :: tail ->
-            let (tLst, tval) = NR tail
-            Topt(tLst, int (float value ** float tval))
         | Div :: tail ->
             let (tLst, tval) = NR tail
             Topt(tLst, value / tval)
@@ -130,7 +126,7 @@ let parseNeval tList =
         match tList with
         | Sub :: tail ->
             let (tLst, tval) = NR tail
-            (tLst, tval * -1) 
+            (tLst, tval * -1)
         | _ -> NR tList
 
     and NR tList =
