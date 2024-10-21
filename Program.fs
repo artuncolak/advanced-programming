@@ -127,8 +127,9 @@ let parseNeval tList =
             let (tLst, tval) = P tail
             Topt(tLst, value / tval)
         | Mod :: tail ->
-            let (tLst, tval) = NR tail
-            Topt(tLst, value % tval)
+            let (tLst, tval) = P tail
+            if value % tval < 0 then Topt(tLst, value % tval + tval)
+            else Topt(tLst, value % tval)
         | _ -> (tList, value)
 
     and P tList = (F >> Popt) tList
@@ -136,7 +137,7 @@ let parseNeval tList =
     and Popt (tList, value) =
         match tList with
         | Pow :: tail ->
-            let (tLst, tval) = NR tail
+            let (tLst, tval) = F tail
             Popt(tLst, int (float value ** float tval))
         | _ -> (tList, value)
 
@@ -152,7 +153,6 @@ let parseNeval tList =
         | Num value :: tail -> (tail, value)
         | Lpar :: tail ->
             let (tLst, tval) = E tail
-
             match tLst with
             | Rpar :: tail -> (tail, tval)
             | _ -> raise parseError
