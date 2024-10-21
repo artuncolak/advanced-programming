@@ -55,7 +55,7 @@ let getInputString () : string =
 // Grammar in BNF:
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
-// <T>        ::= <NR> <Topt>
+// <T>        ::= <NR> <Topt> | <NR>
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
 // <P>        ::= <NR> <Popt> | <NR>
 // <Popt>     ::= "^" <NR> <Popt> | <empty>
@@ -77,10 +77,10 @@ let parser tList =
         match tList with
         | Mul :: tail -> (P >> Topt) tail
         | Div :: tail -> (P >> Topt) tail
-        | Mod :: tail -> (NR >> Topt) tail
+        | Mod :: tail -> (P >> Topt) tail
         | _ -> tList
 
-    and P tList = (NR >> Popt) tList
+    and P tList = (F >> Popt) tList
 
     and Popt tList =
         match tList with
@@ -122,16 +122,17 @@ let parseNeval tList =
             let (tLst, tval) = P tail
             Topt(tLst, value / tval)
         | Mod :: tail ->
-            let (tLst, tval) = NR tail
-            Topt(tLst, value % tval)
+            let (tLst, tval) = P tail
+            if value % tval < 0 then Topt(tLst, value % tval + tval)
+            else Topt(tLst, value % tval)
         | _ -> (tList, value)
 
-    and P tList = (NR >> Popt) tList
+    and P tList = (F >> Popt) tList
 
     and Popt (tList, value) =
         match tList with
         | Pow :: tail ->
-            let (tLst, tval) = NR tail
+            let (tLst, tval) = F tail
             Popt(tLst, int (float value ** float tval))
         | _ -> (tList, value)
 
@@ -140,7 +141,6 @@ let parseNeval tList =
         | Num value :: tail -> (tail, value)
         | Lpar :: tail ->
             let (tLst, tval) = E tail
-
             match tLst with
             | Rpar :: tail -> (tail, tval)
             | _ -> raise parseError
