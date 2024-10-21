@@ -13,6 +13,8 @@ type terminal =
     | Lpar
     | Rpar
     | Num of int
+    | Pow
+    | Mod
 
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
@@ -36,6 +38,8 @@ let lexer input =
         | '/' :: tail -> Div :: scan tail
         | '(' :: tail -> Lpar :: scan tail
         | ')' :: tail -> Rpar :: scan tail
+        | '^' :: tail -> Pow :: scan tail
+        | '%' :: tail -> Mod :: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c ->
             let (iStr, iVal) = scInt (tail, intVal c)
@@ -52,7 +56,8 @@ let getInputString () : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
+// <F>        ::= "-" <NR> | "^" <NR> | <NR>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList =
@@ -64,13 +69,19 @@ let parser tList =
         | Sub :: tail -> (T >> Eopt) tail
         | _ -> tList
 
-    and T tList = (NR >> Topt) tList
+    and T tList = (F >> Topt) tList
 
     and Topt tList =
         match tList with
         | Mul :: tail -> (NR >> Topt) tail
         | Div :: tail -> (NR >> Topt) tail
+        | Mod :: tail -> (NR >> Topt) tail
         | _ -> tList
+
+    and F tList =
+        match tList with
+        | Sub :: tail -> NR tail
+        | _ -> NR tList
 
     and NR tList =
         match tList with
@@ -96,7 +107,7 @@ let parseNeval tList =
             Eopt(tLst, value - tval)
         | _ -> (tList, value)
 
-    and T tList = (NR >> Topt) tList
+    and T tList = (F >> Topt) tList
 
     and Topt (tList, value) =
         match tList with
@@ -106,7 +117,17 @@ let parseNeval tList =
         | Div :: tail ->
             let (tLst, tval) = NR tail
             Topt(tLst, value / tval)
+        | Mod :: tail ->
+            let (tLst, tval) = NR tail
+            Topt(tLst, value % tval)
         | _ -> (tList, value)
+
+    and F tList =
+        match tList with
+        | Sub :: tail ->
+            let (tLst, tval) = NR tail
+            (tLst, tval * -1)
+        | _ -> NR tList
 
     and NR tList =
         match tList with
