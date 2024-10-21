@@ -55,7 +55,7 @@ let getInputString () : string =
 // Grammar in BNF:
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
-// <T>        ::= <NR> <Topt>
+// <T>        ::= <NR> <Topt> | <NR>
 // <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
 // <P>        ::= <NR> <Popt> | <NR>
 // <Popt>     ::= "^" <NR> <Popt> | <empty>
@@ -77,14 +77,15 @@ let parser tList =
         match tList with
         | Mul :: tail -> (P >> Topt) tail
         | Div :: tail -> (P >> Topt) tail
-        | Mod :: tail -> (NR >> Topt) tail
+        | Mod :: tail -> (P >> Topt) tail
         | _ -> tList
 
-    and P tList = (NR >> Popt) tList
+    and P tList = (F >> Popt) tList
 
     and Popt tList =
         match tList with
-        | Pow :: tail -> (NR >> Popt) tail
+        | Pow :: tail -> (F >> Popt) tail
+        | _ -> tList
 
     and F tList =
         match tList with
@@ -130,7 +131,7 @@ let parseNeval tList =
             Topt(tLst, value % tval)
         | _ -> (tList, value)
 
-    and P tList = (NR >> Popt) tList
+    and P tList = (F >> Popt) tList
 
     and Popt (tList, value) =
         match tList with
