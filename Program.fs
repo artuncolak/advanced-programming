@@ -12,7 +12,7 @@ type terminal =
     | Div
     | Lpar
     | Rpar
-    | Num of int
+    | Num of float
     | Pow
     | Mod
 
@@ -23,9 +23,15 @@ let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
 let parseError = System.Exception("Parser error")
 
-let rec scInt (iStr, iVal) =
+let rec scFloat (iStr, iVal, isDecimal, multiplier) =
     match iStr with
-    | c :: tail when isdigit c -> scInt (tail, 10 * iVal + (intVal c))
+    | c :: tail when isdigit c ->
+        if isDecimal then
+            let decimalVal = iVal + (float (intVal c) * multiplier)
+            scFloat (tail, decimalVal, isDecimal, multiplier / 10.0)
+        else
+            scFloat (tail, 10.0 * iVal + float (intVal c), isDecimal, multiplier)
+    | '.' :: tail when not isDecimal -> scFloat (tail, iVal, true, 0.1)
     | _ -> (iStr, iVal)
 
 let lexer input =
@@ -42,7 +48,7 @@ let lexer input =
         | ')' :: tail -> Rpar :: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c ->
-            let (iStr, iVal) = scInt (tail, intVal c)
+            let (iStr, iVal) = scFloat (tail, float (intVal c), false, 1.0)
             Num iVal :: scan iStr
         | _ -> raise lexError
 
@@ -128,8 +134,8 @@ let parseNeval tList =
             Topt(tLst, value / tval)
         | Mod :: tail ->
             let (tLst, tval) = P tail
-            if value % tval < 0 then Topt(tLst, value % tval + tval)
-            else Topt(tLst, value % tval)
+            let modResult = if value % tval < 0.0 then (value % tval + tval) else (value % tval)
+            Topt(tLst, modResult)
         | _ -> (tList, value)
 
     and P tList = (F >> Popt) tList
@@ -138,14 +144,14 @@ let parseNeval tList =
         match tList with
         | Pow :: tail ->
             let (tLst, tval) = F tail
-            Popt(tLst, int (float value ** float tval))
+            Popt(tLst, value ** tval)
         | _ -> (tList, value)
 
     and F tList =
         match tList with
         | Sub :: tail ->
             let (tLst, tval) = NR tail
-            (tLst, tval * -1)
+            (tLst, -tval)
         | _ -> NR tList
 
     and NR tList =
@@ -179,8 +185,10 @@ let main argv =
         let oList = lexer input
         // let sList = printTList oList
         // let pList = printTList (parser oList)
+        // Console.WriteLine(pList)
+        // Console.WriteLine(sList)
         let Out = parseNeval oList
-        Console.WriteLine(snd Out)
+        Console.WriteLine(System.Math.Round(snd Out, 3))
     with
     | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
     | _ -> reraise ()
