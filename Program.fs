@@ -23,6 +23,11 @@ let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
 let parseError = System.Exception("Parser error")
 
+let rec scInt (iStr, iVal) =
+    match iStr with
+    | c :: tail when isdigit c -> scInt (tail, 10 * iVal + (intVal c))
+    | _ -> (iStr, iVal)
+
 let rec scFloat (iStr, iVal, isDecimal, multiplier) =
     match iStr with
     | c :: tail when isdigit c ->
