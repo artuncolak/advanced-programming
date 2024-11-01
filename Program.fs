@@ -12,7 +12,9 @@ type terminal =
     | Div
     | Lpar
     | Rpar
-    | Num of int
+    | Num of float
+    | Pow
+    | Mod
 
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
@@ -21,9 +23,15 @@ let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
 let parseError = System.Exception("Parser error")
 
-let rec scInt (iStr, iVal) =
+let rec scFloat (iStr, iVal, isDecimal, multiplier) =
     match iStr with
-    | c :: tail when isdigit c -> scInt (tail, 10 * iVal + (intVal c))
+    | c :: tail when isdigit c ->
+        if isDecimal then
+            let decimalVal = iVal + (float (intVal c) * multiplier)
+            scFloat (tail, decimalVal, isDecimal, multiplier / 10.0)
+        else
+            scFloat (tail, 10.0 * iVal + float (intVal c), isDecimal, multiplier)
+    | '.' :: tail when not isDecimal -> scFloat (tail, iVal, true, 0.1)
     | _ -> (iStr, iVal)
 
 let lexer input =
@@ -34,25 +42,30 @@ let lexer input =
         | '-' :: tail -> Sub :: scan tail
         | '*' :: tail -> Mul :: scan tail
         | '/' :: tail -> Div :: scan tail
+        | '%' :: tail -> Mod :: scan tail
+        | '^' :: tail -> Pow :: scan tail
         | '(' :: tail -> Lpar :: scan tail
         | ')' :: tail -> Rpar :: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c ->
-            let (iStr, iVal) = scInt (tail, intVal c)
+            let (iStr, iVal) = scFloat (tail, float (intVal c), false, 1.0)
             Num iVal :: scan iStr
         | _ -> raise lexError
 
     scan (str2lst input)
 
 let getInputString () : string =
-    Console.Write("Enter an expression: ")
+    // Console.Write("Enter an expression: ")
     Console.ReadLine()
 
 // Grammar in BNF:
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
-// <T>        ::= <NR> <Topt>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | <empty>
+// <T>        ::= <NR> <Topt> | <NR>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
+// <P>        ::= <NR> <Popt> | <NR>
+// <Popt>     ::= "^" <NR> <Popt> | <empty>
+// <F>        ::= "-" <NR> | "^" <NR> | <NR>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList =
@@ -64,13 +77,26 @@ let parser tList =
         | Sub :: tail -> (T >> Eopt) tail
         | _ -> tList
 
-    and T tList = (NR >> Topt) tList
+    and T tList = (P >> Topt) tList
 
     and Topt tList =
         match tList with
-        | Mul :: tail -> (NR >> Topt) tail
-        | Div :: tail -> (NR >> Topt) tail
+        | Mul :: tail -> (P >> Topt) tail
+        | Div :: tail -> (P >> Topt) tail
+        | Mod :: tail -> (P >> Topt) tail
         | _ -> tList
+
+    and P tList = (F >> Popt) tList
+
+    and Popt tList =
+        match tList with
+        | Pow :: tail -> (F >> Popt) tail
+        | _ -> tList
+
+    and F tList =
+        match tList with
+        | Sub :: tail -> NR tail
+        | _ -> NR tList
 
     and NR tList =
         match tList with
@@ -96,17 +122,43 @@ let parseNeval tList =
             Eopt(tLst, value - tval)
         | _ -> (tList, value)
 
-    and T tList = (NR >> Topt) tList
+    and T tList = (P >> Topt) tList
 
     and Topt (tList, value) =
         match tList with
         | Mul :: tail ->
-            let (tLst, tval) = NR tail
+            let (tLst, tval) = P tail
             Topt(tLst, value * tval)
         | Div :: tail ->
-            let (tLst, tval) = NR tail
+            let (tLst, tval) = P tail
             Topt(tLst, value / tval)
+        | Mod :: tail ->
+            let (tLst, tval) = P tail
+
+            let modResult =
+                if value % tval < 0.0 then
+                    (value % tval + tval)
+                else
+                    (value % tval)
+
+            Topt(tLst, modResult)
         | _ -> (tList, value)
+
+    and P tList = (F >> Popt) tList
+
+    and Popt (tList, value) =
+        match tList with
+        | Pow :: tail ->
+            let (tLst, tval) = F tail
+            Popt(tLst, value ** tval)
+        | _ -> (tList, value)
+
+    and F tList =
+        match tList with
+        | Sub :: tail ->
+            let (tLst, tval) = NR tail
+            (tLst, -tval)
+        | _ -> NR tList
 
     and NR tList =
         match tList with
@@ -134,11 +186,18 @@ let rec printTList (lst: list<terminal>) : list<string> =
 
 [<EntryPoint>]
 let main argv =
-    Console.WriteLine("Simple Interpreter")
-    let input: string = getInputString ()
-    let oList = lexer input
-    let sList = printTList oList
-    let pList = printTList (parser oList)
-    let Out = parseNeval oList
-    Console.WriteLine("Result = {0}", snd Out)
+    try
+        // Console.WriteLine("Simple Interpreter")
+        let input: string = getInputString ()
+        let oList = lexer input
+        // let sList = printTList oList
+        // let pList = printTList (parser oList)
+        // Console.WriteLine(pList)
+        // Console.WriteLine(sList)
+        let Out = parseNeval oList
+        Console.WriteLine(System.Math.Round(snd Out, 3))
+    with
+    | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
+    | _ -> reraise ()
+
     0
