@@ -12,7 +12,8 @@ type terminal =
     | Div
     | Lpar
     | Rpar
-    | Num of float
+    | Float of float
+    | Int of int
     | Pow
     | Mod
 
@@ -23,21 +24,20 @@ let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
 let parseError = System.Exception("Parser error")
 
-let rec scInt (iStr, iVal) =
-    match iStr with
-    | c :: tail when isdigit c -> scInt (tail, 10 * iVal + (intVal c))
-    | _ -> (iStr, iVal)
-
-let rec scFloat (iStr, iVal, isDecimal, multiplier) =
+let rec scNum (iStr, iVal, isDecimal, multiplier) =
     match iStr with
     | c :: tail when isdigit c ->
         if isDecimal then
             let decimalVal = iVal + (float (intVal c) * multiplier)
-            scFloat (tail, decimalVal, isDecimal, multiplier / 10.0)
+            scNum (tail, decimalVal, isDecimal, multiplier / 10.0)
         else
-            scFloat (tail, 10.0 * iVal + float (intVal c), isDecimal, multiplier)
-    | '.' :: tail when not isDecimal -> scFloat (tail, iVal, true, 0.1)
-    | _ -> (iStr, iVal)
+            scNum (tail, 10.0 * iVal + float (intVal c), isDecimal, multiplier)
+    | '.' :: tail when not isDecimal -> scNum (tail, iVal, true, 0.1)
+    | _ -> 
+        if isDecimal then
+            (iStr, Float iVal)
+        else
+            (iStr, Int (int iVal))
 
 let lexer input =
     let rec scan input =
@@ -53,8 +53,8 @@ let lexer input =
         | ')' :: tail -> Rpar :: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c ->
-            let (iStr, iVal) = scFloat (tail, float (intVal c), false, 1.0)
-            Num iVal :: scan iStr
+            let (iStr, realNum) = scNum (tail, intVal c, false, 1.0)
+            realNum :: scan iStr
         | _ -> raise lexError
 
     scan (str2lst input)
@@ -105,7 +105,8 @@ let parser tList =
 
     and NR tList =
         match tList with
-        | Num value :: tail -> tail
+        | Int value :: tail -> tail
+        | Float value :: tail -> tail
         | Lpar :: tail ->
             match E tail with
             | Rpar :: tail -> tail
@@ -161,7 +162,8 @@ let parseNeval tList =
 
     and NR tList =
         match tList with
-        | Num value :: tail -> (tail, value)
+        | Int value :: tail -> (tail, value)
+        | Float value :: tail -> (tail, value)
         | Lpar :: tail ->
             let (tLst, tval) = E tail
             match tLst with
@@ -188,7 +190,7 @@ let main argv =
         // Console.WriteLine("Simple Interpreter")
         let input: string = getInputString ()
         let oList = lexer input
-        // let sList = printTList oList
+        let sList = printTList oList
         // let pList = printTList (parser oList)
         // Console.WriteLine(pList)
         // Console.WriteLine(sList)
