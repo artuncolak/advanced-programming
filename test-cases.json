@@ -20,6 +20,10 @@
         "expectedOutput": 2
     },
     {
+        "input": "-11 % 3",
+        "expectedOutput": 1
+    },
+    {
         "input": "2 + 2 * 2 ^ 3",
         "expectedOutput": 18
     },
