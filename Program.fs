@@ -14,6 +14,7 @@ type terminal =
     | Sub
     | Mul
     | Div
+    | IntDiv
     | Lpar
     | Rpar
     | Num of RealNum
@@ -37,6 +38,11 @@ let toInt (r: RealNum) =
     | Float f -> int f
     | Int i -> i
 
+let toIntOrFloat (r: RealNum) =
+    match r with
+    | Float f -> f
+    | Int i -> i
+
 let rec scNum (iStr, iVal:RealNum, isDecimal, multiplier) =
     match iStr with 
     | c :: tail when isdigit c ->
@@ -53,6 +59,7 @@ let lexer input =
     let rec scan input =
         match input with
         | [] -> []
+        | '/' :: '/' :: tail -> IntDiv :: scan tail
         | '+' :: tail -> Add :: scan tail
         | '-' :: tail -> Sub :: scan tail
         | '*' :: tail -> Mul :: scan tail
@@ -77,7 +84,7 @@ let getInputString () : string =
 // <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt> | <NR>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "//" <NR> <Topt> | "%" <NR> <Topt> | <empty>
 // <P>        ::= <NR> <Popt> | <NR>
 // <Popt>     ::= "^" <NR> <Popt> | <empty>
 // <F>        ::= "-" <NR> | "^" <NR> | <NR>
@@ -98,6 +105,7 @@ let parser tList =
         match tList with
         | Mul :: tail -> (P >> Topt) tail
         | Div :: tail -> (P >> Topt) tail
+        | IntDiv :: tail -> (P >> Topt) tail
         | Mod :: tail -> (P >> Topt) tail
         | _ -> tList
 
@@ -125,55 +133,114 @@ let parser tList =
 
     E tList
 
+let add (x: RealNum) (y: RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Float(f1 + f2)
+    | Float f, Int i -> Float (f + float i)
+    | Int i, Float f -> Float (float i + f)
+    | Int i1, Int i2 -> Int (i1 + i2)
+
+let sub (x: RealNum) (y: RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Float(f1 - f2)
+    | Float f, Int i -> Float (f - float i)
+    | Int i, Float f -> Float (float i - f)
+    | Int i1, Int i2 -> Int (i1 - i2)
+
+let mul (x: RealNum) (y: RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Float(f1 * f2)
+    | Float f, Int i -> Float (f * float i)
+    | Int i, Float f -> Float (float i * f)
+    | Int i1, Int i2 -> Int (i1 * i2)
+
+let div (x: RealNum) (y: RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Float(f1 / f2)
+    | Float f, Int i -> Float (f / float i)
+    | Int i, Float f -> Float (float i / f)
+    // assuming integer division only if "IntDiv" used
+    | Int i1, Int i2 -> Float (float i1 / float i2)
+
+let modulo (x: RealNum) (y: RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Float(f1 % f2)
+    | Float f, Int i -> Float (f % float i)
+    | Int i, Float f -> Float (float i % f)
+    | Int i1, Int i2 -> Int (i1 % i2)
+
+let pow (x: RealNum) (y: RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Float (float f1 ** float f2)
+    | Float f, Int i -> Float (f ** float i)
+    | Int i, Float f -> Float (float i ** f)
+    // negative integer powers return a Float
+    | Int i1, Int i2 -> 
+        if (i1 >= 0) && (i2 >= 0) then
+            Int (int (float i1 ** float i2))
+        else
+            Float (float i1 ** float i2)
+
+let neg (x: RealNum): RealNum =
+    match x with
+    | Float f -> Float -f
+    | Int i -> Int -i
+
 let parseNeval tList =
     let rec E tList = (T >> Eopt) tList
 
-    and Eopt (tList, value) =
+    and Eopt (tList, value:RealNum) =
         match tList with
         | Add :: tail ->
             let (tLst, tval) = T tail
-            Eopt(tLst, value + tval)
+            Eopt(tLst, add value tval)
         | Sub :: tail ->
             let (tLst, tval) = T tail
-            Eopt(tLst, value - tval)
+            Eopt(tLst, sub value tval)
         | _ -> (tList, value)
 
     and T tList = (P >> Topt) tList
 
-    and Topt (tList, value) =
+    and Topt (tList, value:RealNum) =
         match tList with
         | Mul :: tail ->
             let (tLst, tval) = P tail
-            Topt(tLst, value * tval)
+            Topt(tLst, mul value tval)
         | Div :: tail ->
             let (tLst, tval) = P tail
-            Topt(tLst, value / tval)
+            Topt(tLst, div value tval)
+        | IntDiv :: tail ->
+            let (tLst, tval) = P tail
+            Topt(tLst, Int (int (toFloat value / toFloat tval)))
         | Mod :: tail ->
             let (tLst, tval) = P tail
-            let modResult = if value % tval < 0.0 then (value % tval + tval) else (value % tval)
+            let modResult =
+                if modulo value tval < Float 0.0 then
+                    (add (modulo value tval) tval)
+                else
+                    (modulo value tval)
             Topt(tLst, modResult)
         | _ -> (tList, value)
 
     and P tList = (F >> Popt) tList
 
-    and Popt (tList, value) =
+    and Popt (tList, value:RealNum) =
         match tList with
         | Pow :: tail ->
             let (tLst, tval) = F tail
-            Popt(tLst, value ** tval)
+            Popt(tLst, pow value tval)
         | _ -> (tList, value)
 
     and F tList =
         match tList with
         | Sub :: tail ->
             let (tLst, tval) = NR tail
-            (tLst, -tval)
+            (tLst, neg tval)
         | _ -> NR tList
 
     and NR tList =
         match tList with
-        | Num (Int value) :: tail -> (tail, value)
-        | Num (Float value) :: tail -> (tail, value)
+        | Num value :: tail -> (tail, value)
         | Lpar :: tail ->
             let (tLst, tval) = E tail
             match tLst with
@@ -205,7 +272,8 @@ let main argv =
         // Console.WriteLine(pList)
         // Console.WriteLine(sList)
         let Out = parseNeval oList
-        Console.WriteLine(System.Math.Round(snd Out, 3))
+//        Console.WriteLine(System.Math.Round(snd Out, 3))
+        Console.WriteLine(snd Out)
     with
     | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
     | _ -> reraise ()
