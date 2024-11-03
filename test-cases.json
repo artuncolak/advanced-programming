@@ -92,8 +92,24 @@
         "expectedOutput": 6
     },
     {
+        "input": "3.14 + 2",
+        "expectedOutput": 5.14
+    },
+    {
         "input": "5.5 * 2.5",
         "expectedOutput": 13.75
+    },
+    {
+        "input": "5.5 * 2",
+        "expectedOutput": 11
+    },
+    {
+        "input": "11 / 2",
+        "expectedOutput": 5.5
+    },
+    {
+        "input": "11 // 2",
+        "expectedOutput": 5
     },
     {
         "input": "10.5 / 2.1",
@@ -126,5 +142,13 @@
     {
         "input": "1.5 * 2.5 + 3.5 / 0.5 - 2.5",
         "expectedOutput": 8.25
+    },
+    {
+        "input": "3.4 * 2",
+        "expectedOutput": 6.8
+    },
+    {
+        "input": "10.5 / 2",
+        "expectedOutput": 5.25
     }
 ]
