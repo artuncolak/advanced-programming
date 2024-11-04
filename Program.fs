@@ -168,6 +168,13 @@ let div (x: RealNum) (y: RealNum) : RealNum =
         else
             Float (float i1 / float i2)
 
+let intdiv (x: RealNum) (y:RealNum) : RealNum =
+    match x, y with
+    | Float f1, Float f2 -> Int (int (f1 / f2))
+    | Float f, Int i -> Int (int (f / float i))
+    | Int i, Float f -> Int (int (float i / f))
+    | Int i1, Int i2 -> Int (i1 / i2)
+
 //// if wish to force integer division, use "//" (IntDiv) operator instead
 //let div (x: RealNum) (y: RealNum) : RealNum =
 //    match x, y with
@@ -247,7 +254,7 @@ let parseNeval tList =
             Topt(tLst, div value tval)
         | IntDiv :: tail ->
             let (tLst, tval) = P tail
-            Topt(tLst, Int (int (toFloat value / toFloat tval)))
+            Topt(tLst, intdiv value tval)
         | Mod :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, modulo value tval)
