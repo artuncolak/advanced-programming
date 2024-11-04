@@ -155,15 +155,18 @@ let mul (x: RealNum) (y: RealNum) : RealNum =
     | Int i1, Int i2 -> Int (i1 * i2)
 
 let div (x: RealNum) (y: RealNum) : RealNum =
-    match x, y with
-    | Float f1, Float f2 -> Float(f1 / f2)
-    | Float f, Int i -> Float (f / float i)
-    | Int i, Float f -> Float (float i / f)
-    | Int i1, Int i2 ->
-    if i1 % i2 = 0 then
-        Int (i1 / i2)
+    if toInt y = 0 || toFloat y = 0.0 then
+        raise (DivideByZeroException "Divide by zero not allowed")
     else
-        Float (float i1 / float i2)
+        match x, y with
+        | Float f1, Float f2 -> Float(f1 / f2)
+        | Float f, Int i -> Float (f / float i)
+        | Int i, Float f -> Float (float i / f)
+        | Int i1, Int i2 ->
+        if i1 % i2 = 0 then
+            Int (i1 / i2)
+        else
+            Float (float i1 / float i2)
 
 //// if wish to force integer division, use "//" (IntDiv) operator instead
 //let div (x: RealNum) (y: RealNum) : RealNum =
