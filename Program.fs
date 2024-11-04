@@ -155,7 +155,7 @@ let mul (x: RealNum) (y: RealNum) : RealNum =
     | Int i1, Int i2 -> Int (i1 * i2)
 
 let div (x: RealNum) (y: RealNum) : RealNum =
-    if toInt y = 0 || toFloat y = 0.0 then
+    if toIntOrFloat y = 0 || toIntOrFloat y = 0.0 then
         raise (DivideByZeroException "Divide by zero not allowed")
     else
         match x, y with
