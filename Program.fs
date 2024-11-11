@@ -9,6 +9,8 @@ type RealNum =
     | Float of float
     | Int of int
 
+type Variable = char
+
 type terminal =
     | Add
     | Sub
@@ -20,6 +22,10 @@ type terminal =
     | Num of RealNum
     | Pow
     | Mod
+    | Assign
+    | Var of Variable
+
+type SymbolTable = Map<Variable, RealNum>
 
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
@@ -27,6 +33,17 @@ let isdigit c = System.Char.IsDigit c
 let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
 let parseError = System.Exception("Parser error")
+
+let mutable symbolTable: SymbolTable = Map.empty
+
+let setVariable (var: Variable) (value: RealNum) : RealNum =
+    symbolTable <- symbolTable.Add(var, value)
+    value
+
+let getVariable (var: Variable) : RealNum =
+    match symbolTable.TryFind(var) with
+    | Some value -> value
+    | None -> raise (System.Exception($"Variable {var} not found"))
 
 let toFloat (r: RealNum) =
     match r with
@@ -43,22 +60,34 @@ let toIntOrFloat (r: RealNum) =
     | Float f -> f
     | Int i -> i
 
-let rec scNum (iStr, iVal:RealNum, isDecimal, multiplier) =
-    match iStr with 
+let rec scNum (iStr, iVal: RealNum, isDecimal, multiplier) =
+    match iStr with
     | c :: tail when isdigit c ->
         if isDecimal then
             let decimalVal = toFloat iVal + float (intVal c) * multiplier
             scNum (tail, Float decimalVal, isDecimal, multiplier / 10.0)
         else
-            scNum (tail, Int (10 * toInt iVal + intVal c), isDecimal, multiplier)
-    | '.' :: tail when not isDecimal ->
-        scNum (tail, iVal, true, 0.1)
-    | _ -> (iStr, iVal) 
+            scNum (tail, Int(10 * toInt iVal + intVal c), isDecimal, multiplier)
+    | '.' :: tail when not isDecimal -> scNum (tail, iVal, true, 0.1)
+    | _ -> (iStr, iVal)
+
+let isLetter c = System.Char.IsLetter c
+
+let rec scVar input acc =
+    match input with
+    | c :: tail when isLetter c || isdigit c -> scVar tail (acc + c)
+    | _ -> (input, acc)
+
 
 let lexer input =
     let rec scan input =
         match input with
         | [] -> []
+        | '=' :: tail -> Assign :: scan tail
+        | c :: tail when isblank c -> scan tail
+        | c :: tail when isLetter c ->
+            let (remaining, varName) = scVar tail (c)
+            Var varName :: scan remaining
         | '/' :: '/' :: tail -> IntDiv :: scan tail
         | '+' :: tail -> Add :: scan tail
         | '-' :: tail -> Sub :: scan tail
@@ -70,15 +99,11 @@ let lexer input =
         | ')' :: tail -> Rpar :: scan tail
         | c :: tail when isblank c -> scan tail
         | c :: tail when isdigit c ->
-            let (iStr, realNum) = scNum (tail, Int (intVal c), false, 1)
-            Num (realNum) :: scan iStr
+            let (iStr, realNum) = scNum (tail, Int(intVal c), false, 1)
+            Num(realNum) :: scan iStr
         | _ -> raise lexError
 
     scan (str2lst input)
-
-let getInputString () : string =
-    // Console.Write("Enter an expression: ")
-    Console.ReadLine()
 
 // Grammar in BNF:
 // <E>        ::= <T> <Eopt>
@@ -91,7 +116,12 @@ let getInputString () : string =
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let parser tList =
-    let rec E tList = (T >> Eopt) tList // >> is forward function composition operator: let inline (>>) f g x = g(f x)
+    let rec E tList =
+        match tList with
+        | Var v :: Assign :: tail ->
+            match E tail with
+            | remaining -> remaining
+        | _ -> (T >> Eopt) tList
 
     and Eopt tList =
         match tList with
@@ -123,8 +153,8 @@ let parser tList =
 
     and NR tList =
         match tList with
-        | Num (Int value) :: tail -> tail
-        | Num (Float value) :: tail -> tail
+        | Num(Int value) :: tail -> tail
+        | Num(Float value) :: tail -> tail
         | Lpar :: tail ->
             match E tail with
             | Rpar :: tail -> tail
@@ -136,23 +166,23 @@ let parser tList =
 let add (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
     | Float f1, Float f2 -> Float(f1 + f2)
-    | Float f, Int i -> Float (f + float i)
-    | Int i, Float f -> Float (float i + f)
-    | Int i1, Int i2 -> Int (i1 + i2)
+    | Float f, Int i -> Float(f + float i)
+    | Int i, Float f -> Float(float i + f)
+    | Int i1, Int i2 -> Int(i1 + i2)
 
 let sub (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
     | Float f1, Float f2 -> Float(f1 - f2)
-    | Float f, Int i -> Float (f - float i)
-    | Int i, Float f -> Float (float i - f)
-    | Int i1, Int i2 -> Int (i1 - i2)
+    | Float f, Int i -> Float(f - float i)
+    | Int i, Float f -> Float(float i - f)
+    | Int i1, Int i2 -> Int(i1 - i2)
 
 let mul (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
     | Float f1, Float f2 -> Float(f1 * f2)
-    | Float f, Int i -> Float (f * float i)
-    | Int i, Float f -> Float (float i * f)
-    | Int i1, Int i2 -> Int (i1 * i2)
+    | Float f, Int i -> Float(f * float i)
+    | Int i, Float f -> Float(float i * f)
+    | Int i1, Int i2 -> Int(i1 * i2)
 
 let div (x: RealNum) (y: RealNum) : RealNum =
     if toIntOrFloat y = 0 || toIntOrFloat y = 0.0 then
@@ -160,28 +190,29 @@ let div (x: RealNum) (y: RealNum) : RealNum =
     else
         match x, y with
         | Float f1, Float f2 -> Float(f1 / f2)
-        | Float f, Int i -> Float (f / float i)
-        | Int i, Float f -> Float (float i / f)
+        | Float f, Int i -> Float(f / float i)
+        | Int i, Float f -> Float(float i / f)
         | Int i1, Int i2 ->
-        if i1 % i2 = 0 then
-            Int (i1 / i2)
-        else
-            Float (float i1 / float i2)
+            if i1 % i2 = 0 then
+                Int(i1 / i2)
+            else
+                Float(float i1 / float i2)
 
-let intdiv (x: RealNum) (y:RealNum) : RealNum =
+let intdiv (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
-    | Float f1, Float f2 -> Int (int (f1 / f2))
-    | Float f, Int i -> Int (int (f / float i))
-    | Int i, Float f -> Int (int (float i / f))
-    | Int i1, Int i2 -> Int (i1 / i2)
+    | Float f1, Float f2 -> Int(int (f1 / f2))
+    | Float f, Int i -> Int(int (f / float i))
+    | Int i, Float f -> Int(int (float i / f))
+    | Int i1, Int i2 -> Int(i1 / i2)
 
 let modulo (x: RealNum) (y: RealNum) : RealNum =
     let baseResult =
         match x, y with
         | Float f1, Float f2 -> Float(f1 % f2)
-        | Float f, Int i -> Float (f % float i)
-        | Int i, Float f -> Float (float i % f)
-        | Int i1, Int i2 -> Int (i1 % i2)
+        | Float f, Int i -> Float(f % float i)
+        | Int i, Float f -> Float(float i % f)
+        | Int i1, Int i2 -> Int(i1 % i2)
+
     if toIntOrFloat x % toIntOrFloat y < 0 then
         add baseResult y
     else
@@ -189,25 +220,30 @@ let modulo (x: RealNum) (y: RealNum) : RealNum =
 
 let pow (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
-    | Float f1, Float f2 -> Float (float f1 ** float f2)
-    | Float f, Int i -> Float (f ** float i)
-    | Int i, Float f -> Float (float i ** f)
+    | Float f1, Float f2 -> Float(float f1 ** float f2)
+    | Float f, Int i -> Float(f ** float i)
+    | Int i, Float f -> Float(float i ** f)
     // negative integer powers return a Float
-    | Int i1, Int i2 -> 
+    | Int i1, Int i2 ->
         if (i1 >= 0) && (i2 >= 0) then
-            Int (int (float i1 ** float i2))
+            Int(int (float i1 ** float i2))
         else
-            Float (float i1 ** float i2)
+            Float(float i1 ** float i2)
 
-let neg (x: RealNum): RealNum =
+let neg (x: RealNum) : RealNum =
     match x with
     | Float f -> Float -f
     | Int i -> Int -i
 
 let parseNeval tList =
-    let rec E tList = (T >> Eopt) tList
+    let rec E tList =
+        match tList with
+        | Var v :: Assign :: tail ->
+            let (remaining, value) = E tail
+            (remaining, setVariable v value)
+        | _ -> (T >> Eopt) tList
 
-    and Eopt (tList, value:RealNum) =
+    and Eopt (tList, value: RealNum) =
         match tList with
         | Add :: tail ->
             let (tLst, tval) = T tail
@@ -219,7 +255,7 @@ let parseNeval tList =
 
     and T tList = (P >> Topt) tList
 
-    and Topt (tList, value:RealNum) =
+    and Topt (tList, value: RealNum) =
         match tList with
         | Mul :: tail ->
             let (tLst, tval) = P tail
@@ -237,7 +273,7 @@ let parseNeval tList =
 
     and P tList = (F >> Popt) tList
 
-    and Popt (tList, value:RealNum) =
+    and Popt (tList, value: RealNum) =
         match tList with
         | Pow :: tail ->
             let (tLst, tval) = F tail
@@ -254,6 +290,7 @@ let parseNeval tList =
     and NR tList =
         match tList with
         | Num value :: tail -> (tail, value)
+        | Var v :: tail -> (tail, getVariable v)
         | Lpar :: tail ->
             let (tLst, tval) = E tail
             match tLst with
@@ -274,21 +311,32 @@ let rec printTList (lst: list<terminal>) : list<string> =
         []
 
 
+let evaluate (input: string) =
+    try
+        let oList = lexer input
+        let Out = parseNeval oList
+        snd Out
+    with
+    | :? System.DivideByZeroException ->
+        printfn "Divide by zero not allowed"
+        Int 0
+    | ex ->
+        printfn "Error: %s" ex.Message
+        Int 0
+
 [<EntryPoint>]
 let main argv =
-    try
-        // Console.WriteLine("Simple Interpreter")
-        let input: string = getInputString ()
-        let oList = lexer input
-        // let sList = printTList oList
-        // let pList = printTList (parser oList)
-        // Console.WriteLine(pList)
-        // Console.WriteLine(sList)
-        let Out = parseNeval oList
-//        Console.WriteLine(System.Math.Round(snd Out, 3))
-        Console.WriteLine(snd Out)
-    with
-    | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
-    | _ -> reraise ()
+    printfn "Interpreter (type 'exit' to quit)"
+    let mutable running = true
+
+    while running do
+        printf "> "
+        let input = Console.ReadLine()
+
+        if input.ToLower() = "exit" then
+            running <- false
+        else
+            let result = evaluate input
+            printfn "%A" result
 
     0
