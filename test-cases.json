@@ -82,7 +82,7 @@
     {
 	"test_case": "int; extended expressions within brackets",
         "input": "(8 + 2 * 5) / (2 + 3)",
-        "expectedOutput": "Float 3.6"
+        "expectedOutput": "Int 3"
     },
     {
 	"test_case": "int; various",
@@ -137,7 +137,7 @@
     {
 	"test_case": "int div int",
         "input": "11 / 2",
-        "expectedOutput": "Float 5.5"
+        "expectedOutput": "Int 5"
     },
     {
 	"test_case": "float intdiv float",

@@ -263,7 +263,7 @@ let main argv =
         // Console.WriteLine("Simple Interpreter")
         let input: string = getInputString ()
         let oList = lexer input
-        let sList = printTList oList
+        // let sList = printTList oList
         // let pList = printTList (parser oList)
         // Console.WriteLine(pList)
         // Console.WriteLine(sList)
