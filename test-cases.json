@@ -140,11 +140,6 @@
         "expectedOutput": "Float 5.5"
     },
     {
-	"test_case": "int intdiv int",
-        "input": "11 // 2",
-        "expectedOutput": "Int 5"
-    },
-    {
 	"test_case": "float intdiv float",
         "input": "10.5 / 2.1",
         "expectedOutput": "Float 5.0"

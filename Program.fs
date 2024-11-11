@@ -175,31 +175,6 @@ let intdiv (x: RealNum) (y:RealNum) : RealNum =
     | Int i, Float f -> Int (int (float i / f))
     | Int i1, Int i2 -> Int (i1 / i2)
 
-//// if wish to force integer division, use "//" (IntDiv) operator instead
-//let div (x: RealNum) (y: RealNum) : RealNum =
-//    match x, y with
-//    | Float f1, Float f2 ->
-//    // attempt to return Int. If not divisible, return Float.
-//        if f1 % f2 = 0.0 then
-//            Int (int (f1 / f2))
-//        else
-//            Float (f1 / f2)
-//    | Float f, Int i ->
-//        if f % float i = 0.0 then
-//            Int (int (f / float i))
-//        else
-//            Float (f / float i)
-//    | Int i, Float f ->
-//        if float i % f = 0.0 then
-//            Int (int (float i / f))
-//        else
-//            Float (float i / f)
-//    | Int i1, Int i2 ->
-//    if i1 % i2 = 0 then
-//        Int (i1 / i2)
-//    else
-//        Float (float i1 / float i2)
-
 let modulo (x: RealNum) (y: RealNum) : RealNum =
     let baseResult =
         match x, y with
