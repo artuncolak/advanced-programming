@@ -14,7 +14,6 @@ type terminal =
     | Sub
     | Mul
     | Div
-    | IntDiv
     | Lpar
     | Rpar
     | Num of RealNum
@@ -59,7 +58,6 @@ let lexer input =
     let rec scan input =
         match input with
         | [] -> []
-        | '/' :: '/' :: tail -> IntDiv :: scan tail
         | '+' :: tail -> Add :: scan tail
         | '-' :: tail -> Sub :: scan tail
         | '*' :: tail -> Mul :: scan tail
@@ -105,7 +103,6 @@ let parser tList =
         match tList with
         | Mul :: tail -> (P >> Topt) tail
         | Div :: tail -> (P >> Topt) tail
-        | IntDiv :: tail -> (P >> Topt) tail
         | Mod :: tail -> (P >> Topt) tail
         | _ -> tList
 
@@ -162,18 +159,7 @@ let div (x: RealNum) (y: RealNum) : RealNum =
         | Float f1, Float f2 -> Float(f1 / f2)
         | Float f, Int i -> Float (f / float i)
         | Int i, Float f -> Float (float i / f)
-        | Int i1, Int i2 ->
-        if i1 % i2 = 0 then
-            Int (i1 / i2)
-        else
-            Float (float i1 / float i2)
-
-let intdiv (x: RealNum) (y:RealNum) : RealNum =
-    match x, y with
-    | Float f1, Float f2 -> Int (int (f1 / f2))
-    | Float f, Int i -> Int (int (f / float i))
-    | Int i, Float f -> Int (int (float i / f))
-    | Int i1, Int i2 -> Int (i1 / i2)
+        | Int i1, Int i2 -> Int (i1 / i2)
 
 let modulo (x: RealNum) (y: RealNum) : RealNum =
     let baseResult =
@@ -227,9 +213,6 @@ let parseNeval tList =
         | Div :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, div value tval)
-        | IntDiv :: tail ->
-            let (tLst, tval) = P tail
-            Topt(tLst, intdiv value tval)
         | Mod :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, modulo value tval)
@@ -280,7 +263,7 @@ let main argv =
         // Console.WriteLine("Simple Interpreter")
         let input: string = getInputString ()
         let oList = lexer input
-        // let sList = printTList oList
+        let sList = printTList oList
         // let pList = printTList (parser oList)
         // Console.WriteLine(pList)
         // Console.WriteLine(sList)
