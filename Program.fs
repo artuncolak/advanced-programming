@@ -20,10 +20,12 @@ type terminal =
     | Pow
     | Mod
 
+type PositionedToken = { Token: terminal; Position: int }
+
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
-let lexError = System.Exception("Lexer error")
+//let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
 let parseError = System.Exception("Parser error")
 
@@ -55,24 +57,24 @@ let rec scNum (iStr, iVal:RealNum, isDecimal, multiplier) =
     | _ -> (iStr, iVal) 
 
 let lexer input =
-    let rec scan input =
+    let rec scan (input: char list) (pos: int) =
         match input with
         | [] -> []
-        | '+' :: tail -> Add :: scan tail
-        | '-' :: tail -> Sub :: scan tail
-        | '*' :: tail -> Mul :: scan tail
-        | '/' :: tail -> Div :: scan tail
-        | '%' :: tail -> Mod :: scan tail
-        | '^' :: tail -> Pow :: scan tail
-        | '(' :: tail -> Lpar :: scan tail
-        | ')' :: tail -> Rpar :: scan tail
-        | c :: tail when isblank c -> scan tail
+        | '+' :: tail -> Add :: scan tail  (pos + 1)
+        | '-' :: tail -> Sub :: scan tail (pos + 1)
+        | '*' :: tail -> Mul :: scan tail (pos + 1)
+        | '/' :: tail -> Div :: scan tail (pos + 1)
+        | '%' :: tail -> Mod :: scan tail (pos + 1)
+        | '^' :: tail -> Pow :: scan tail (pos + 1)
+        | '(' :: tail -> Lpar :: scan tail (pos + 1)
+        | ')' :: tail -> Rpar :: scan tail (pos + 1)
+        | c :: tail when isblank c -> scan tail (pos + 1)
         | c :: tail when isdigit c ->
             let (iStr, realNum) = scNum (tail, Int (intVal c), false, 1)
-            Num (realNum) :: scan iStr
-        | _ -> raise lexError
+            Num (realNum) :: scan iStr (pos + (List.length input - List.length iStr))
+        | c :: _ -> raise (Exception($"Lexer error: Unrecognized operator or character '{c}'"))
 
-    scan (str2lst input)
+    scan (str2lst input) 0
 
 let getInputString () : string =
     // Console.Write("Enter an expression: ")
@@ -93,40 +95,41 @@ let parser tList =
 
     and Eopt tList =
         match tList with
-        | Add :: tail -> (T >> Eopt) tail
-        | Sub :: tail -> (T >> Eopt) tail
+        | { Token = Add; Position = pos } :: tail -> (T >> Eopt) tail
+        | { Token = Sub; Position = pos } :: tail -> (T >> Eopt) tail
         | _ -> tList
 
     and T tList = (P >> Topt) tList
 
     and Topt tList =
         match tList with
-        | Mul :: tail -> (P >> Topt) tail
-        | Div :: tail -> (P >> Topt) tail
-        | Mod :: tail -> (P >> Topt) tail
+        | { Token = Mul; Position = pos } :: tail -> (P >> Topt) tail
+        | { Token = Div; Position = pos } :: tail -> (P >> Topt) tail
+        | { Token = Mod; Position = pos } :: tail -> (P >> Topt) tail
         | _ -> tList
 
     and P tList = (F >> Popt) tList
 
     and Popt tList =
         match tList with
-        | Pow :: tail -> (F >> Popt) tail
+        | { Token = Pow; Position = pos } :: tail -> (F >> Popt) tail
         | _ -> tList
 
     and F tList =
         match tList with
-        | Sub :: tail -> NR tail
+        | { Token = Sub; Position = pos } :: tail -> NR tail
         | _ -> NR tList
 
     and NR tList =
         match tList with
-        | Num (Int value) :: tail -> tail
-        | Num (Float value) :: tail -> tail
-        | Lpar :: tail ->
+        | { Token = Num _; Position = _ } :: tail -> tail
+        | { Token = Lpar; Position = pos } :: tail ->
             match E tail with
-            | Rpar :: tail -> tail
-            | _ -> raise parseError
-        | _ -> raise parseError
+            | { Token = Rpar; Position = _ } :: tail -> tail
+//            | _ -> raise parseError
+            | _ -> raise (Exception($"Parser error: Missing closing parenthesis at position {pos}"))
+//        | c :: _ -> raise (System.Exception($"Parser error: Unable to parse operator or character '{c}'"))
+        | _ -> raise (Exception($"Parser error: Parser error at unexpected position"))
 
     E tList
 
@@ -242,7 +245,10 @@ let parseNeval tList =
 
             match tLst with
             | Rpar :: tail -> (tail, tval)
+//            | _ -> invalidArg "tval" "Lexer error"
             | _ -> raise parseError
+//            | _ -> raise (System.Exception($"Parser error: Unable to parse operator or character '{c}'"))
+//        | _ -> raise (System.Exception($"Parser error: Unable to parse operator or character '{c}'"))
         | _ -> raise parseError
 
     E tList
@@ -273,6 +279,12 @@ let main argv =
         Console.WriteLine(snd Out)
     with
     | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
-    | _ -> reraise ()
+    | ex when ex.Message.StartsWith("Lexer error") ->
+        Console.WriteLine($"Error: {ex.Message}")
+    |  ex when ex.Message.StartsWith("Parser error") ->
+        Console.WriteLine($"Error: {ex.Message}")
+    |  ex ->
+        Console.WriteLine($"Error: {ex.Message}")
+        reraise ()
 
     0
