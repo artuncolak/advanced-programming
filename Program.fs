@@ -24,8 +24,11 @@ type terminal =
     | Mod
     | Assign
     | Var of Variable
+    | Print
 
 type SymbolTable = Map<Variable, RealNum>
+
+let mutable debugMode = false
 
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
@@ -73,11 +76,19 @@ let rec scNum (iStr, iVal: RealNum, isDecimal, multiplier) =
 
 let isLetter c = System.Char.IsLetter c
 
+// Add this new function to check for keywords
+let isKeyword (str: string) =
+    let keywords = [ "print" ] // Add any other keywords here
+    List.contains (str.ToLower()) keywords
+
 let rec scVar input acc =
     match input with
-    | c :: tail when isLetter c || isdigit c -> scVar tail (acc + c)
-    | _ -> (input, acc)
+    | c :: tail when isLetter c || isdigit c -> scVar tail (acc + string c)
+    | _ ->
+        if isKeyword acc then
+            raise (System.Exception($"Cannot use reserved word '{acc}' as variable name"))
 
+        (input, acc.[0]) // Keep the first character as before
 
 let lexer input =
     let rec scan input =
@@ -85,8 +96,9 @@ let lexer input =
         | [] -> []
         | '=' :: tail -> Assign :: scan tail
         | c :: tail when isblank c -> scan tail
+        | 'p' :: 'r' :: 'i' :: 'n' :: 't' :: tail -> Print :: scan tail
         | c :: tail when isLetter c ->
-            let (remaining, varName) = scVar tail (c)
+            let (remaining, varName) = scVar tail (string c)
             Var varName :: scan remaining
         | '/' :: '/' :: tail -> IntDiv :: scan tail
         | '+' :: tail -> Add :: scan tail
@@ -106,14 +118,15 @@ let lexer input =
     scan (str2lst input)
 
 // Grammar in BNF:
-// <E>        ::= <T> <Eopt>
+// <E>        ::= "print" "(" <E> ")" | <T> <Eopt> | <VAR> "=" <E>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt> | <NR>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "//" <NR> <Topt> | "%" <NR> <Topt> | <empty>
 // <P>        ::= <NR> <Popt> | <NR>
 // <Popt>     ::= "^" <NR> <Popt> | <empty>
 // <F>        ::= "-" <NR> | "^" <NR> | <NR>
-// <NR>       ::= "Num" <value> | "(" <E> ")"
+// <NR>       ::= "Num" <value> | "(" <E> ")" | <VAR>
+// <VAR>      ::= "Variable" <char>
 
 let parser tList =
     let rec E tList =
@@ -235,9 +248,22 @@ let neg (x: RealNum) : RealNum =
     | Float f -> Float -f
     | Int i -> Int -i
 
+let formatResult (result: RealNum) : string =
+    match result with
+    | Float f -> sprintf "%.6g" f // Using %.6g for clean float formatting
+    | Int i -> string i
+
 let parseNeval tList =
     let rec E tList =
         match tList with
+        | Print :: Lpar :: tail ->
+            let (remaining, value) = E tail
+
+            match remaining with
+            | Rpar :: rest ->
+                printfn "%s" (formatResult value)
+                (rest, value)
+            | _ -> raise parseError
         | Var v :: Assign :: tail ->
             let (remaining, value) = E tail
             (remaining, setVariable v value)
@@ -293,6 +319,7 @@ let parseNeval tList =
         | Var v :: tail -> (tail, getVariable v)
         | Lpar :: tail ->
             let (tLst, tval) = E tail
+
             match tLst with
             | Rpar :: tail -> (tail, tval)
             | _ -> raise parseError
@@ -303,29 +330,59 @@ let parseNeval tList =
 let rec printTList (lst: list<terminal>) : list<string> =
     match lst with
     | head :: tail ->
-        Console.Write("{0} ", head.ToString())
+        Console.WriteLine("  {0} ", head.ToString())
         printTList tail
 
     | [] ->
-        Console.Write("EOL\n")
+        Console.WriteLine("  EOL")
         []
 
+let printSymbolTable () =
+    printfn "\nSymbol Table:"
+
+    if Map.isEmpty symbolTable then
+        printfn "  <empty>"
+    else
+        symbolTable |> Map.iter (fun k v -> printfn "  %c = %s" k (formatResult v))
+
+    printfn ""
 
 let evaluate (input: string) =
     try
-        let oList = lexer input
-        let Out = parseNeval oList
-        snd Out
-    with
-    | :? System.DivideByZeroException ->
-        printfn "Divide by zero not allowed"
-        Int 0
-    | ex ->
-        printfn "Error: %s" ex.Message
-        Int 0
+        if debugMode then
+            Console.ForegroundColor <- ConsoleColor.Green
+            Console.WriteLine("\n================OUTPUT================\n")
+            Console.ResetColor()
 
-[<EntryPoint>]
-let main argv =
+        let oList = lexer input
+
+        let _ = parseNeval oList
+
+        if debugMode then
+            Console.ForegroundColor <- ConsoleColor.Blue
+            Console.WriteLine("\n================DEBUG=================\n")
+            Console.WriteLine("Tokens:")
+            printTList oList |> ignore
+            printSymbolTable ()
+            Console.ResetColor()
+
+        ()
+    with
+    | :? System.DivideByZeroException -> printfn "Divide by zero not allowed"
+    | ex -> printfn "Error: %s" ex.Message
+
+let readAndEvaluateFile (filePath: string) =
+    try
+        let lines = System.IO.File.ReadAllLines(filePath)
+
+        for line in lines do
+            if not (String.IsNullOrWhiteSpace(line)) then
+                evaluate line
+    with
+    | :? System.IO.FileNotFoundException -> printfn "Error: Source file not found at path: %s" filePath
+    | ex -> printfn "Error reading/evaluating file: %s" ex.Message
+
+let repl () =
     printfn "Interpreter (type 'exit' to quit)"
     let mutable running = true
 
@@ -336,7 +393,27 @@ let main argv =
         if input.ToLower() = "exit" then
             running <- false
         else
-            let result = evaluate input
-            printfn "%A" result
+            evaluate input
 
-    0
+[<EntryPoint>]
+let main argv =
+    let hasDebug = Array.contains "--debug" argv
+    let argsWithoutDebug = Array.filter ((<>) "--debug") argv
+
+    debugMode <- hasDebug
+
+    match argsWithoutDebug with
+    | [| "--repl" |] ->
+        repl ()
+        0
+    | [| "--input"; filePath |] ->
+        readAndEvaluateFile filePath
+        0
+    | _ ->
+        printfn "Usage: Program [mode] [arguments]"
+        printfn "Modes:"
+        printfn "  --repl              Start interactive REPL mode"
+        printfn "  --input <filepath>  Execute script from file"
+        printfn "Options:"
+        printfn "  --debug             Enable debug output"
+        1
