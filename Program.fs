@@ -26,8 +26,6 @@ let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
 let intVal (c: char) = (int) ((int) c - (int) '0')
-//let lexError = System.Exception("Lexer error")
-//let parseError = System.Exception("Parser error")
 
 let toFloat (r: RealNum) =
     match r with

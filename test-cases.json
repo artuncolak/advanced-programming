@@ -190,24 +190,34 @@
         "expectedOutput": "Float 5.25"
     },
     {
-	"test_case": "parse error",
-        "input": "3 0",
-        "expectedOutput": "Error: missing operator between \"3\" and \"0\""
-    },
-    {
 	"test_case": "float parse error",
         "input": "3.",
         "expectedOutput": "Error: Invalid number \"3.\""
     },
     {
+	"test_case": "float parse error",
+        "input": "3..0",
+        "expectedOutput": "Error: Invalid number \"3..0\""
+    },
+    {
+	"test_case": "parse error",
+        "input": "3 0",
+        "expectedOutput": "Parser error: missing operator at position 2"
+    },
+    {
+	"test_case": "parse error",
+        "input": "3 () 0",
+        "expectedOutput": "Parser error: missing operator at position 2"
+    },
+    {
 	"test_case": "invalid operator",
         "input": "3 ++ 2",
-        "expectedOutput": "Error: Invalid operator \"++\""
+        "expectedOutput": "Parser error: Unexpected 'Add' token at position 3"
     },
     {
 	"test_case": "invalid bracket expression",
         "input": "3 - (2 + 1",
-        "expectedOutput": "Error: expected closing bracket"
+        "expectedOutput": "Parser error: Missing closing parenthesis at position 4"
     },
     {
 	"test_case": "invalid bracket expression",
