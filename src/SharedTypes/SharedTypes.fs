@@ -19,5 +19,6 @@ type Terminal =
     | Assign
     | Var of Variable
     | Print
+    | VarKeyword
 
 type PositionedToken = { Token: Terminal; Position: int }

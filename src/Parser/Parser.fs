@@ -16,7 +16,7 @@ module Parser =
                     printfn "%s" (Utils.formatResult value)
                     (rest, value)
                 | _ -> raise parseError
-            | { Token = Var v; Position = _ } :: { Token = Assign; Position = _ } :: tail ->
+            | { Token = VarKeyword; Position = _ } :: { Token = Var v; Position = _ } :: { Token = Assign; Position = _ } :: tail ->
                 let (remaining, value) = E tail
                 (remaining, SymbolTable.set v value)
             | _ -> (T >> Eopt) tList
