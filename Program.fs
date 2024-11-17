@@ -5,18 +5,17 @@
 
 open System
 
+type Variable = char
+
 type RealNum =
     | Float of float
     | Int of int
-
-type Variable = char
 
 type terminal =
     | Add
     | Sub
     | Mul
     | Div
-    | IntDiv
     | Lpar
     | Rpar
     | Num of RealNum
@@ -26,18 +25,24 @@ type terminal =
     | Var of Variable
     | Print
 
+type PositionedToken = { Token: terminal; Position: int }
+
 type SymbolTable = Map<Variable, RealNum>
 
+let mutable symbolTable: SymbolTable = Map.empty
 let mutable debugMode = false
 
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
-let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
+
 let parseError = System.Exception("Parser error")
 
-let mutable symbolTable: SymbolTable = Map.empty
+let formatResult (result: RealNum) : string =
+    match result with
+    | Float f -> sprintf "%.6g" f
+    | Int i -> string i
 
 let setVariable (var: Variable) (value: RealNum) : RealNum =
     symbolTable <- symbolTable.Add(var, value)
@@ -74,107 +79,44 @@ let rec scNum (iStr, iVal: RealNum, isDecimal, multiplier) =
     | '.' :: tail when not isDecimal -> scNum (tail, iVal, true, 0.1)
     | _ -> (iStr, iVal)
 
-let isLetter c = System.Char.IsLetter c
-
-// Add this new function to check for keywords
-let isKeyword (str: string) =
-    let keywords = [ "print" ] // Add any other keywords here
-    List.contains (str.ToLower()) keywords
-
-let rec scVar input acc =
-    match input with
-    | c :: tail when isLetter c || isdigit c -> scVar tail (acc + string c)
-    | _ ->
-        if isKeyword acc then
-            raise (System.Exception($"Cannot use reserved word '{acc}' as variable name"))
-
-        (input, acc.[0]) // Keep the first character as before
-
-let lexer input =
-    let rec scan input =
+let lexer input : PositionedToken list =
+    let rec scan (input: char list) (pos: int) =
         match input with
         | [] -> []
-        | '=' :: tail -> Assign :: scan tail
-        | c :: tail when isblank c -> scan tail
-        | 'p' :: 'r' :: 'i' :: 'n' :: 't' :: tail -> Print :: scan tail
-        | c :: tail when isLetter c ->
-            let (remaining, varName) = scVar tail (string c)
-            Var varName :: scan remaining
-        | '/' :: '/' :: tail -> IntDiv :: scan tail
-        | '+' :: tail -> Add :: scan tail
-        | '-' :: tail -> Sub :: scan tail
-        | '*' :: tail -> Mul :: scan tail
-        | '/' :: tail -> Div :: scan tail
-        | '%' :: tail -> Mod :: scan tail
-        | '^' :: tail -> Pow :: scan tail
-        | '(' :: tail -> Lpar :: scan tail
-        | ')' :: tail -> Rpar :: scan tail
-        | c :: tail when isblank c -> scan tail
+        | '+' :: tail -> { Token = Add; Position = pos } :: scan tail (pos + 1)
+        | '-' :: tail -> { Token = Sub; Position = pos } :: scan tail (pos + 1)
+        | '*' :: tail -> { Token = Mul; Position = pos } :: scan tail (pos + 1)
+        | '/' :: tail -> { Token = Div; Position = pos } :: scan tail (pos + 1)
+        | '%' :: tail -> { Token = Mod; Position = pos } :: scan tail (pos + 1)
+        | '^' :: tail -> { Token = Pow; Position = pos } :: scan tail (pos + 1)
+        | '(' :: tail -> { Token = Lpar; Position = pos } :: scan tail (pos + 1)
+        | ')' :: tail -> { Token = Rpar; Position = pos } :: scan tail (pos + 1)
+        | '=' :: tail -> { Token = Assign; Position = pos } :: scan tail (pos + 1)
+        | 'p' :: 'r' :: 'i' :: 'n' :: 't' :: tail -> { Token = Print; Position = pos } :: scan tail (pos + 5)
+        | c :: tail when System.Char.IsLetter(c) -> { Token = Var c; Position = pos } :: scan tail (pos + 1)
+        | c :: tail when isblank c -> scan tail (pos + 1)
         | c :: tail when isdigit c ->
             let (iStr, realNum) = scNum (tail, Int(intVal c), false, 1)
-            Num(realNum) :: scan iStr
-        | _ -> raise lexError
 
-    scan (str2lst input)
+            { Token = Num realNum; Position = pos }
+            :: scan iStr (pos + (List.length input - List.length iStr))
+        | c :: _ -> raise (System.Exception($"Lexer error: Unrecognized character '{c}'"))
+
+    scan (str2lst input) 0
+
+let getInputString () : string =
+    // Console.Write("Enter an expression: ")
+    Console.ReadLine()
 
 // Grammar in BNF:
-// <E>        ::= "print" "(" <E> ")" | <T> <Eopt> | <VAR> "=" <E>
+// <E>        ::= <T> <Eopt>
 // <Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
 // <T>        ::= <NR> <Topt> | <NR>
-// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "//" <NR> <Topt> | "%" <NR> <Topt> | <empty>
+// <Topt>     ::= "*" <NR> <Topt> | "/" <NR> <Topt> | "%" <NR> <Topt> | <empty>
 // <P>        ::= <NR> <Popt> | <NR>
 // <Popt>     ::= "^" <NR> <Popt> | <empty>
 // <F>        ::= "-" <NR> | "^" <NR> | <NR>
-// <NR>       ::= "Num" <value> | "(" <E> ")" | <VAR>
-// <VAR>      ::= "Variable" <char>
-
-let parser tList =
-    let rec E tList =
-        match tList with
-        | Var v :: Assign :: tail ->
-            match E tail with
-            | remaining -> remaining
-        | _ -> (T >> Eopt) tList
-
-    and Eopt tList =
-        match tList with
-        | Add :: tail -> (T >> Eopt) tail
-        | Sub :: tail -> (T >> Eopt) tail
-        | _ -> tList
-
-    and T tList = (P >> Topt) tList
-
-    and Topt tList =
-        match tList with
-        | Mul :: tail -> (P >> Topt) tail
-        | Div :: tail -> (P >> Topt) tail
-        | IntDiv :: tail -> (P >> Topt) tail
-        | Mod :: tail -> (P >> Topt) tail
-        | _ -> tList
-
-    and P tList = (F >> Popt) tList
-
-    and Popt tList =
-        match tList with
-        | Pow :: tail -> (F >> Popt) tail
-        | _ -> tList
-
-    and F tList =
-        match tList with
-        | Sub :: tail -> NR tail
-        | _ -> NR tList
-
-    and NR tList =
-        match tList with
-        | Num(Int value) :: tail -> tail
-        | Num(Float value) :: tail -> tail
-        | Lpar :: tail ->
-            match E tail with
-            | Rpar :: tail -> tail
-            | _ -> raise parseError
-        | _ -> raise parseError
-
-    E tList
+// <NR>       ::= "Num" <value> | "(" <E> ")"
 
 let add (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
@@ -205,18 +147,7 @@ let div (x: RealNum) (y: RealNum) : RealNum =
         | Float f1, Float f2 -> Float(f1 / f2)
         | Float f, Int i -> Float(f / float i)
         | Int i, Float f -> Float(float i / f)
-        | Int i1, Int i2 ->
-            if i1 % i2 = 0 then
-                Int(i1 / i2)
-            else
-                Float(float i1 / float i2)
-
-let intdiv (x: RealNum) (y: RealNum) : RealNum =
-    match x, y with
-    | Float f1, Float f2 -> Int(int (f1 / f2))
-    | Float f, Int i -> Int(int (f / float i))
-    | Int i, Float f -> Int(int (float i / f))
-    | Int i1, Int i2 -> Int(i1 / i2)
+        | Int i1, Int i2 -> Int(i1 / i2)
 
 let modulo (x: RealNum) (y: RealNum) : RealNum =
     let baseResult =
@@ -248,33 +179,28 @@ let neg (x: RealNum) : RealNum =
     | Float f -> Float -f
     | Int i -> Int -i
 
-let formatResult (result: RealNum) : string =
-    match result with
-    | Float f -> sprintf "%.6g" f // Using %.6g for clean float formatting
-    | Int i -> string i
-
 let parseNeval tList =
     let rec E tList =
         match tList with
-        | Print :: Lpar :: tail ->
+        | { Token = Print; Position = _ } :: { Token = Lpar; Position = _ } :: tail ->
             let (remaining, value) = E tail
 
             match remaining with
-            | Rpar :: rest ->
+            | { Token = Rpar; Position = _ } :: rest ->
                 printfn "%s" (formatResult value)
                 (rest, value)
             | _ -> raise parseError
-        | Var v :: Assign :: tail ->
+        | { Token = Var v; Position = _ } :: { Token = Assign; Position = _ } :: tail ->
             let (remaining, value) = E tail
             (remaining, setVariable v value)
         | _ -> (T >> Eopt) tList
 
     and Eopt (tList, value: RealNum) =
         match tList with
-        | Add :: tail ->
+        | { Token = Add; Position = pos } :: tail ->
             let (tLst, tval) = T tail
             Eopt(tLst, add value tval)
-        | Sub :: tail ->
+        | { Token = Sub; Position = pos } :: tail ->
             let (tLst, tval) = T tail
             Eopt(tLst, sub value tval)
         | _ -> (tList, value)
@@ -283,16 +209,13 @@ let parseNeval tList =
 
     and Topt (tList, value: RealNum) =
         match tList with
-        | Mul :: tail ->
+        | { Token = Mul; Position = pos } :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, mul value tval)
-        | Div :: tail ->
+        | { Token = Div; Position = pos } :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, div value tval)
-        | IntDiv :: tail ->
-            let (tLst, tval) = P tail
-            Topt(tLst, intdiv value tval)
-        | Mod :: tail ->
+        | { Token = Mod; Position = pos } :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, modulo value tval)
         | _ -> (tList, value)
@@ -301,40 +224,42 @@ let parseNeval tList =
 
     and Popt (tList, value: RealNum) =
         match tList with
-        | Pow :: tail ->
+        | { Token = Pow; Position = pos } :: tail ->
             let (tLst, tval) = F tail
             Popt(tLst, pow value tval)
         | _ -> (tList, value)
 
     and F tList =
         match tList with
-        | Sub :: tail ->
+        | { Token = Sub; Position = pos } :: tail ->
             let (tLst, tval) = NR tail
             (tLst, neg tval)
         | _ -> NR tList
 
     and NR tList =
         match tList with
-        | Num value :: tail -> (tail, value)
-        | Var v :: tail -> (tail, getVariable v)
-        | Lpar :: tail ->
-            let (tLst, tval) = E tail
+        | { Token = Num value; Position = _ } :: tail -> (tail, value)
+        | { Token = Var v; Position = _ } :: tail -> (tail, getVariable v)
+        | { Token = Lpar; Position = pos } :: tail ->
+            let t = E tail
 
-            match tLst with
-            | Rpar :: tail -> (tail, tval)
-            | _ -> raise parseError
-        | _ -> raise parseError
+            match fst t with
+            | { Token = Rpar; Position = _ } :: tail -> tail, snd t
+            | _ -> raise (System.Exception($"Parser error: Missing closing parenthesis at position {pos}"))
+        | { Token = token; Position = pos } :: _ ->
+            raise (System.Exception($"Parser error: Unexpected '{token}' token at position {pos}"))
+        | [] -> raise (System.Exception("Parser error: Unexpected end of input"))
 
     E tList
 
 let rec printTList (lst: list<terminal>) : list<string> =
     match lst with
     | head :: tail ->
-        Console.WriteLine("  {0} ", head.ToString())
+        Console.Write("{0} ", head.ToString())
         printTList tail
 
     | [] ->
-        Console.WriteLine("  EOL")
+        Console.Write("EOL\n")
         []
 
 let printSymbolTable () =
@@ -355,20 +280,19 @@ let evaluate (input: string) =
             Console.ResetColor()
 
         let oList = lexer input
-
-        let _ = parseNeval oList
+        let Out = parseNeval oList
 
         if debugMode then
             Console.ForegroundColor <- ConsoleColor.Blue
             Console.WriteLine("\n================DEBUG=================\n")
             Console.WriteLine("Tokens:")
-            printTList oList |> ignore
+            let _ = printTList (List.map (fun pt -> pt.Token) oList)
             printSymbolTable ()
             Console.ResetColor()
-
-        ()
     with
     | :? System.DivideByZeroException -> printfn "Divide by zero not allowed"
+    | ex when ex.Message.StartsWith("Lexer error") -> printfn "%s" ex.Message
+    | ex when ex.Message.StartsWith("Parser error") -> printfn "%s" ex.Message
     | ex -> printfn "Error: %s" ex.Message
 
 let readAndEvaluateFile (filePath: string) =

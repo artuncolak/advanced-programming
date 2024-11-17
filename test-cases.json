@@ -82,7 +82,7 @@
     {
 	"test_case": "int; extended expressions within brackets",
         "input": "(8 + 2 * 5) / (2 + 3)",
-        "expectedOutput": "Float 3.6"
+        "expectedOutput": "Int 3"
     },
     {
 	"test_case": "int; various",
@@ -137,7 +137,7 @@
     {
 	"test_case": "int div int",
         "input": "11 / 2",
-        "expectedOutput": "Float 5.5"
+        "expectedOutput": "Int 5"
     },
     {
 	"test_case": "float intdiv float",
@@ -188,5 +188,40 @@
 	"test_case": "float div int",
         "input": "10.5 / 2",
         "expectedOutput": "Float 5.25"
+    },
+    {
+	"test_case": "float parse error",
+        "input": "3.",
+        "expectedOutput": "Error: Invalid number \"3.\""
+    },
+    {
+	"test_case": "float parse error",
+        "input": "3..0",
+        "expectedOutput": "Error: Invalid number \"3..0\""
+    },
+    {
+	"test_case": "parse error",
+        "input": "3 0",
+        "expectedOutput": "Parser error: missing operator at position 2"
+    },
+    {
+	"test_case": "parse error",
+        "input": "3 () 0",
+        "expectedOutput": "Parser error: missing operator at position 2"
+    },
+    {
+	"test_case": "invalid operator",
+        "input": "3 ++ 2",
+        "expectedOutput": "Parser error: Unexpected 'Add' token at position 3"
+    },
+    {
+	"test_case": "invalid bracket expression",
+        "input": "3 - (2 + 1",
+        "expectedOutput": "Parser error: Missing closing parenthesis at position 4"
+    },
+    {
+	"test_case": "invalid bracket expression",
+        "input": "3 - 2) + 1",
+        "expectedOutput": "Error: unexpected token \")\""
     }
 ]
