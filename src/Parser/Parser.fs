@@ -2,12 +2,48 @@
 
 open SharedTypes
 open SymbolTable
-open Errors
 
 module Parser =
     let run (tList: PositionedToken list) =
         let rec E tList =
             match tList with
+            | { Token = If; Position = _ } :: tail ->
+                let (remaining1, condition) = E tail
+
+                match remaining1 with
+                | { Token = Then; Position = _ } :: [] ->
+                    raise (System.Exception("Parser error: Expected statement after 'then'"))
+                | { Token = Then; Position = _ } :: tail2 ->
+                    match condition with
+                    | Int 0
+                    | Float 0.0 ->
+                        // Condition is false, skip the then part and look for else
+                        let rec skipThenPart tokens depth =
+                            match tokens with
+                            | { Token = If; Position = _ } :: rest -> skipThenPart rest (depth + 1)
+                            | { Token = Else; Position = _ } :: [] ->
+                                raise (System.Exception("Parser error: Expected statement after 'else'"))
+                            | { Token = Else; Position = _ } :: rest when depth = 0 ->
+                                let (remaining2, result) = E rest
+                                (remaining2, result)
+                            | _ :: rest -> skipThenPart rest depth
+                            | [] -> ([], Int 0)
+
+                        skipThenPart tail2 0
+                    | _ ->
+                        let (remaining2, result) = E tail2
+
+                        let rec skipElsePart tokens depth =
+                            match tokens with
+                            | { Token = If; Position = _ } :: rest -> skipElsePart rest (depth + 1)
+                            | { Token = Else; Position = _ } :: rest when depth = 0 ->
+                                match E rest with
+                                | (remaining, _) -> (remaining, result)
+                            | _ :: rest -> skipElsePart rest depth
+                            | [] -> (tokens, result)
+
+                        skipElsePart remaining2 0
+                | _ -> raise (System.Exception("Parser error: Expected 'then' after if condition"))
             | { Token = Print; Position = _ } :: { Token = Lpar; Position = _ } :: tail ->
                 let (remaining, value) = E tail
 
@@ -15,14 +51,65 @@ module Parser =
                 | { Token = Rpar; Position = _ } :: rest ->
                     printfn "%s" (Utils.formatResult value)
                     (rest, value)
-                | _ -> raise parseError
-            | { Token = VarKeyword; Position = _ } :: { Token = Var v; Position = _ } :: { Token = Assign; Position = _ } :: tail ->
-                let (remaining, value) = E tail
-                (remaining, SymbolTable.set v value)
+                | _ -> raise (System.Exception("Parser error: Expected closing parenthesis ')' after print expression"))
+            | { Token = VarKeyword; Position = _ } :: { Token = Var v; Position = _ } :: tail ->
+                match tail with
+                | { Token = Assign; Position = _ } :: rest ->
+                    let (remaining, value) = E rest
+                    (remaining, SymbolTable.set v value)
+                | _ -> raise (System.Exception("Parser error: Expected '=' after variable declaration"))
             | _ -> (T >> Eopt) tList
 
         and Eopt (tList, value: RealNum) =
             match tList with
+            | { Token = Eq; Position = _ } :: tail ->
+                let (tLst, tval) = T tail
+
+                match (value, tval) with
+                | (Int i1, Int i2) -> (tLst, if i1 = i2 then Int 1 else Int 0)
+                | (Float f1, Float f2) -> (tLst, if f1 = f2 then Int 1 else Int 0)
+                | (Int i, Float f) -> (tLst, if float i = f then Int 1 else Int 0)
+                | (Float f, Int i) -> (tLst, if f = float i then Int 1 else Int 0)
+            | { Token = Ne; Position = _ } :: tail ->
+                let (tLst, tval) = T tail
+
+                match (value, tval) with
+                | (Int i1, Int i2) -> (tLst, if i1 <> i2 then Int 1 else Int 0)
+                | (Float f1, Float f2) -> (tLst, if f1 <> f2 then Int 1 else Int 0)
+                | (Int i, Float f) -> (tLst, if float i <> f then Int 1 else Int 0)
+                | (Float f, Int i) -> (tLst, if f <> float i then Int 1 else Int 0)
+            | { Token = Gt; Position = _ } :: tail ->
+                let (tLst, tval) = T tail
+
+                match (value, tval) with
+                | (Int i1, Int i2) -> (tLst, if i1 > i2 then Int 1 else Int 0)
+                | (Float f1, Float f2) -> (tLst, if f1 > f2 then Int 1 else Int 0)
+                | (Int i, Float f) -> (tLst, if float i > f then Int 1 else Int 0)
+                | (Float f, Int i) -> (tLst, if f > float i then Int 1 else Int 0)
+            | { Token = Ge; Position = _ } :: tail ->
+                let (tLst, tval) = T tail
+
+                match (value, tval) with
+                | (Int i1, Int i2) -> (tLst, if i1 >= i2 then Int 1 else Int 0)
+                | (Float f1, Float f2) -> (tLst, if f1 >= f2 then Int 1 else Int 0)
+                | (Int i, Float f) -> (tLst, if float i >= f then Int 1 else Int 0)
+                | (Float f, Int i) -> (tLst, if f >= float i then Int 1 else Int 0)
+            | { Token = Lt; Position = _ } :: tail ->
+                let (tLst, tval) = T tail
+
+                match (value, tval) with
+                | (Int i1, Int i2) -> (tLst, if i1 < i2 then Int 1 else Int 0)
+                | (Float f1, Float f2) -> (tLst, if f1 < f2 then Int 1 else Int 0)
+                | (Int i, Float f) -> (tLst, if float i < f then Int 1 else Int 0)
+                | (Float f, Int i) -> (tLst, if f < float i then Int 1 else Int 0)
+            | { Token = Le; Position = _ } :: tail ->
+                let (tLst, tval) = T tail
+
+                match (value, tval) with
+                | (Int i1, Int i2) -> (tLst, if i1 <= i2 then Int 1 else Int 0)
+                | (Float f1, Float f2) -> (tLst, if f1 <= f2 then Int 1 else Int 0)
+                | (Int i, Float f) -> (tLst, if float i <= f then Int 1 else Int 0)
+                | (Float f, Int i) -> (tLst, if f <= float i then Int 1 else Int 0)
             | { Token = Add; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
                 Eopt(tLst, Operations.add value tval)

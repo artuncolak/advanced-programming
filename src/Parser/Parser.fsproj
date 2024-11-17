@@ -4,7 +4,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Errors.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Operations.fs" />
     <Compile Include="Parser.fs" />

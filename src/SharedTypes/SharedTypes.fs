@@ -20,5 +20,14 @@ type Terminal =
     | Var of Variable
     | Print
     | VarKeyword
+    | If
+    | Then
+    | Else
+    | Eq
+    | Ne
+    | Gt
+    | Ge
+    | Lt
+    | Le
 
 type PositionedToken = { Token: Terminal; Position: int }

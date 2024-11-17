@@ -29,8 +29,21 @@ module Lexer =
         let rec scan (input: char list) (pos: int) =
             match input with
             | [] -> []
+            | 'i' :: 'f' :: tail when isblank (List.head tail) ->
+                { Token = If; Position = pos } :: scan (List.skipWhile isblank tail) (pos + 2)
+            | 't' :: 'h' :: 'e' :: 'n' :: tail when isblank (List.head tail) ->
+                { Token = Then; Position = pos } :: scan (List.skipWhile isblank tail) (pos + 4)
+            | 'e' :: 'l' :: 's' :: 'e' :: tail when isblank (List.head tail) ->
+                { Token = Else; Position = pos } :: scan (List.skipWhile isblank tail) (pos + 4)
+            | '=' :: '=' :: tail -> { Token = Eq; Position = pos } :: scan tail (pos + 2)
+            | '!' :: '=' :: tail -> { Token = Ne; Position = pos } :: scan tail (pos + 2)
+            | '>' :: '=' :: tail -> { Token = Ge; Position = pos } :: scan tail (pos + 2)
+            | '<' :: '=' :: tail -> { Token = Le; Position = pos } :: scan tail (pos + 2)
+            | '>' :: tail -> { Token = Gt; Position = pos } :: scan tail (pos + 1)
+            | '<' :: tail -> { Token = Lt; Position = pos } :: scan tail (pos + 1)
             | 'v' :: 'a' :: 'r' :: tail when isblank (List.head tail) ->
-                { Token = VarKeyword; Position = pos } :: scan (List.skipWhile isblank tail) (pos + 3)
+                { Token = VarKeyword; Position = pos }
+                :: scan (List.skipWhile isblank tail) (pos + 3)
             | '+' :: tail -> { Token = Add; Position = pos } :: scan tail (pos + 1)
             | '-' :: tail -> { Token = Sub; Position = pos } :: scan tail (pos + 1)
             | '*' :: tail -> { Token = Mul; Position = pos } :: scan tail (pos + 1)
