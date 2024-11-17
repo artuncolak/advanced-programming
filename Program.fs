@@ -25,9 +25,9 @@ type PositionedToken = { Token: terminal; Position: int }
 let str2lst s = [ for c in s -> c ]
 let isblank c = System.Char.IsWhiteSpace c
 let isdigit c = System.Char.IsDigit c
-//let lexError = System.Exception("Lexer error")
 let intVal (c: char) = (int) ((int) c - (int) '0')
-let parseError = System.Exception("Parser error")
+//let lexError = System.Exception("Lexer error")
+//let parseError = System.Exception("Parser error")
 
 let toFloat (r: RealNum) =
     match r with
@@ -56,23 +56,23 @@ let rec scNum (iStr, iVal:RealNum, isDecimal, multiplier) =
         scNum (tail, iVal, true, 0.1)
     | _ -> (iStr, iVal) 
 
-let lexer input =
+let lexer input : PositionedToken list =
     let rec scan (input: char list) (pos: int) =
         match input with
         | [] -> []
-        | '+' :: tail -> Add :: scan tail  (pos + 1)
-        | '-' :: tail -> Sub :: scan tail (pos + 1)
-        | '*' :: tail -> Mul :: scan tail (pos + 1)
-        | '/' :: tail -> Div :: scan tail (pos + 1)
-        | '%' :: tail -> Mod :: scan tail (pos + 1)
-        | '^' :: tail -> Pow :: scan tail (pos + 1)
-        | '(' :: tail -> Lpar :: scan tail (pos + 1)
-        | ')' :: tail -> Rpar :: scan tail (pos + 1)
+        | '+' :: tail -> { Token = Add; Position = pos } :: scan tail  (pos + 1)
+        | '-' :: tail -> { Token = Sub; Position = pos } :: scan tail (pos + 1)
+        | '*' :: tail -> { Token = Mul; Position = pos } :: scan tail (pos + 1)
+        | '/' :: tail -> { Token = Div; Position = pos } :: scan tail (pos + 1)
+        | '%' :: tail -> { Token = Mod; Position = pos } :: scan tail (pos + 1)
+        | '^' :: tail -> { Token = Pow; Position = pos } :: scan tail (pos + 1)
+        | '(' :: tail -> { Token = Lpar; Position = pos } :: scan tail (pos + 1)
+        | ')' :: tail -> { Token = Rpar; Position = pos } :: scan tail (pos + 1)
         | c :: tail when isblank c -> scan tail (pos + 1)
         | c :: tail when isdigit c ->
             let (iStr, realNum) = scNum (tail, Int (intVal c), false, 1)
-            Num (realNum) :: scan iStr (pos + (List.length input - List.length iStr))
-        | c :: _ -> raise (Exception($"Lexer error: Unrecognized operator or character '{c}'"))
+            { Token = Num realNum; Position = pos } :: scan iStr (pos + (List.length input - List.length iStr))
+        | c :: _ -> raise (System.Exception($"Lexer error: Unrecognized character '{c}'"))
 
     scan (str2lst input) 0
 
@@ -90,7 +90,7 @@ let getInputString () : string =
 // <F>        ::= "-" <NR> | "^" <NR> | <NR>
 // <NR>       ::= "Num" <value> | "(" <E> ")"
 
-let parser tList =
+let parser ( tList: list<PositionedToken> ) =
     let rec E tList = (T >> Eopt) tList // >> is forward function composition operator: let inline (>>) f g x = g(f x)
 
     and Eopt tList =
@@ -126,10 +126,10 @@ let parser tList =
         | { Token = Lpar; Position = pos } :: tail ->
             match E tail with
             | { Token = Rpar; Position = _ } :: tail -> tail
-//            | _ -> raise parseError
-            | _ -> raise (Exception($"Parser error: Missing closing parenthesis at position {pos}"))
-//        | c :: _ -> raise (System.Exception($"Parser error: Unable to parse operator or character '{c}'"))
-        | _ -> raise (Exception($"Parser error: Parser error at unexpected position"))
+            | _ -> raise (System.Exception($"Parser error: Missing closing parenthesis at position {pos}"))
+        | { Token = token; Position = pos } :: _ ->
+            raise (System.Exception($"Parser error: Unexpected '{token}' token at position {pos}"))
+        | [] -> raise (System.Exception("Parser error: Unexpected end of input"))
 
     E tList
 
@@ -198,10 +198,10 @@ let parseNeval tList =
 
     and Eopt (tList, value:RealNum) =
         match tList with
-        | Add :: tail ->
+        | { Token = Add; Position = pos } :: tail ->
             let (tLst, tval) = T tail
             Eopt(tLst, add value tval)
-        | Sub :: tail ->
+        | { Token = Sub; Position = pos } :: tail ->
             let (tLst, tval) = T tail
             Eopt(tLst, sub value tval)
         | _ -> (tList, value)
@@ -210,13 +210,13 @@ let parseNeval tList =
 
     and Topt (tList, value:RealNum) =
         match tList with
-        | Mul :: tail ->
+        | { Token = Mul; Position = pos } :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, mul value tval)
-        | Div :: tail ->
+        | { Token = Div; Position = pos } :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, div value tval)
-        | Mod :: tail ->
+        | { Token = Mod; Position = pos } :: tail ->
             let (tLst, tval) = P tail
             Topt(tLst, modulo value tval)
         | _ -> (tList, value)
@@ -225,31 +225,29 @@ let parseNeval tList =
 
     and Popt (tList, value:RealNum) =
         match tList with
-        | Pow :: tail ->
+        | { Token = Pow; Position = pos } :: tail ->
             let (tLst, tval) = F tail
             Popt(tLst, pow value tval)
         | _ -> (tList, value)
 
     and F tList =
         match tList with
-        | Sub :: tail ->
+        | { Token = Sub; Position = pos } :: tail ->
             let (tLst, tval) = NR tail
             (tLst, neg tval)
         | _ -> NR tList
 
     and NR tList =
         match tList with
-        | Num value :: tail -> (tail, value)
-        | Lpar :: tail ->
-            let (tLst, tval) = E tail
-
-            match tLst with
-            | Rpar :: tail -> (tail, tval)
-//            | _ -> invalidArg "tval" "Lexer error"
-            | _ -> raise parseError
-//            | _ -> raise (System.Exception($"Parser error: Unable to parse operator or character '{c}'"))
-//        | _ -> raise (System.Exception($"Parser error: Unable to parse operator or character '{c}'"))
-        | _ -> raise parseError
+        | { Token = Num value; Position = _ } :: tail -> (tail, value)
+        | { Token = Lpar; Position = pos } :: tail ->
+            let t = E tail
+            match fst t with
+            | { Token = Rpar; Position = _ } :: tail -> tail, snd t
+            | _ -> raise (System.Exception($"Parser error: Missing closing parenthesis at position {pos}"))
+        | { Token = token; Position = pos } :: _ ->
+            raise (System.Exception($"Parser error: Unexpected '{token}' token at position {pos}"))
+        | [] -> raise (System.Exception("Parser error: Unexpected end of input"))
 
     E tList
 
@@ -274,17 +272,18 @@ let main argv =
         // let pList = printTList (parser oList)
         // Console.WriteLine(pList)
         // Console.WriteLine(sList)
-        let Out = parseNeval oList
-//        Console.WriteLine(System.Math.Round(snd Out, 3))
+        let Out =
+            parseNeval oList
+//        Console.WriteLine(System.Math.Round(snd Out, 3))                                                                                                                                          
         Console.WriteLine(snd Out)
     with
     | :? System.DivideByZeroException -> Console.WriteLine("Divide by zero not allowed")
     | ex when ex.Message.StartsWith("Lexer error") ->
-        Console.WriteLine($"Error: {ex.Message}")
-    |  ex when ex.Message.StartsWith("Parser error") ->
-        Console.WriteLine($"Error: {ex.Message}")
+        Console.WriteLine($"{ex.Message}")
+    | ex when ex.Message.StartsWith("Parser error") ->
+        Console.WriteLine($"{ex.Message}")
     |  ex ->
-        Console.WriteLine($"Error: {ex.Message}")
+        Console.WriteLine($"{ex.Message}")
         reraise ()
 
     0
