@@ -1,0 +1,10 @@
+<E>        ::= <VAR_DECL> | <T> <Eopt>
+<VAR_DECL> ::= "var" <VAR> "=" <E>
+<Eopt>     ::= "+" <T> <Eopt> | "-" <T> <Eopt> | <empty>
+<T>        ::= <P> <Topt>
+<Topt>     ::= "*" <P> <Topt> | "/" <P> <Topt> | "%" <P> <Topt> | <empty>
+<P>        ::= <F> <Popt>
+<Popt>     ::= "^" <F> <Popt> | <empty>
+<F>        ::= "-" <NR> | <NR>
+<NR>       ::= "Num" <value> | <VAR> | "(" <E> ")"
+<VAR>      ::= <letter>
