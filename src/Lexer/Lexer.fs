@@ -61,6 +61,7 @@ module Lexer =
 
                 { Token = Num num; Position = pos }
                 :: scan remainingStr (pos + (input.Length - remainingStr.Length))
-            | c :: _ -> raise (System.Exception($"Lexer error: Unrecognized character '{c}' at position {pos}"))
+            | c :: _ -> 
+                raise (System.Exception($"Lexer error: Unrecognized character '{c}' at position {pos + 1}"))
 
         scan (str2lst input) 0
