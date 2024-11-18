@@ -27,7 +27,9 @@ let run (input: string, debug: bool) =
 
         match remaining with
         | [] -> result
-        | { Token = t; Position = p } :: _ -> raise (Exception($"Parser error: Unexpected token '{t}' at position {p}"))
+        | { Token = t; Position = p } :: _ ->
+            let offset = remaining.Length
+            raise (Exception($"Parser error: Unexpected token '{t}' at position {p + 1}"))
 
     with
     | :? System.DivideByZeroException ->
