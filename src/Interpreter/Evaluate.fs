@@ -32,7 +32,7 @@ let run (input: string, debug: bool) =
             raise (Exception($"Parser error: Unexpected token '{t}' at position {p + 1}"))
 
     with
-    | :? System.DivideByZeroException -> "Error: Division by zero"
+    | :? DivideByZeroException -> "Error: Division by zero"
     | ex when ex.Message.StartsWith("Lexer error") -> ex.Message
     | ex when ex.Message.StartsWith("Parser error") -> ex.Message
     | ex -> sprintf "Error: %s" ex.Message
