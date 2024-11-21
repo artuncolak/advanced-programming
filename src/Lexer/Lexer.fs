@@ -22,7 +22,10 @@ module Lexer =
                     | Int i -> i
 
                 scNum (tail, Int(10 * newVal + intVal c), isDecimal, multiplier)
-        | '.' :: tail when not isDecimal -> scNum (tail, iVal, true, 0.1)
+        | '.' :: tail when not isDecimal ->
+            scNum (tail, iVal, true, 0.1)
+        | '.' :: _ when isDecimal ->
+            raise (System.Exception($"Lexer error: invalid float"))
         | _ -> (iStr, iVal)
 
     let run (input: string) : PositionedToken list =
