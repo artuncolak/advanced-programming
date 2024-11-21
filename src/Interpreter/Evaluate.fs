@@ -26,21 +26,13 @@ let run (input: string, debug: bool) =
             Console.ResetColor()
 
         match remaining with
-        | [] -> result
+        | [] -> Utils.formatResult result
         | { Token = t; Position = p } :: _ ->
             let offset = remaining.Length
             raise (Exception($"Parser error: Unexpected token '{t}' at position {p + 1}"))
 
     with
-    | :? System.DivideByZeroException ->
-        printfn "Error: Division by zero"
-        Int 0
-    | ex when ex.Message.StartsWith("Lexer error") ->
-        printfn "%s" ex.Message
-        Int 0
-    | ex when ex.Message.StartsWith("Parser error") ->
-        printfn "%s" ex.Message
-        Int 0
-    | ex ->
-        printfn "Error: %s" ex.Message
-        Int 0
+    | :? System.DivideByZeroException -> "Error: Division by zero"
+    | ex when ex.Message.StartsWith("Lexer error") -> ex.Message
+    | ex when ex.Message.StartsWith("Parser error") -> ex.Message
+    | ex -> sprintf "Error: %s" ex.Message

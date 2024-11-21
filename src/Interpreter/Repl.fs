@@ -14,4 +14,4 @@ let run (debug: bool) =
             running <- false
         else
             let result = Evaluate.run (input, debug)
-            printfn "%s" (Utils.formatResult result)
+            printfn "%s" (result)

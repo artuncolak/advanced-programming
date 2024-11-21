@@ -13,4 +13,4 @@ module Interpreter =
 
     let evaluate (input: string) =
         let result = Evaluate.run (input, false)
-        Utils.formatResult result
+        result
