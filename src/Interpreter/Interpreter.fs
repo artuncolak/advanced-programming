@@ -10,3 +10,7 @@ module Interpreter =
             match filePath with
             | Some path -> ScriptRunner.run (path, debug)
             | None -> failwith "Script mode requires a file path"
+
+    let evaluate (input: string) =
+        let result = Evaluate.run (input, false)
+        Utils.formatResult result
