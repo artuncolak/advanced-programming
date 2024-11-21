@@ -13,5 +13,5 @@ let run (debug: bool) =
         if input.ToLower() = "exit" then
             running <- false
         else
-            let _ = Evaluate.run (input, debug)
-            ()
+            let result = Evaluate.run (input, debug)
+            printfn "%s" (Utils.formatResult result)
