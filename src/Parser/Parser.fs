@@ -18,6 +18,7 @@ module Parser =
                     | Int 0
                     | Float 0.0 ->
                         // Condition is false, skip the then part and look for else
+                        System.Console.WriteLine("Condition is false")
                         let rec skipThenPart tokens depth =
                             match tokens with
                             | { Token = If; Position = _ } :: rest -> skipThenPart rest (depth + 1)
@@ -37,8 +38,14 @@ module Parser =
                             match tokens with
                             | { Token = If; Position = _ } :: rest -> skipElsePart rest (depth + 1)
                             | { Token = Else; Position = _ } :: rest when depth = 0 ->
-                                match E rest with
-                                | (remaining, _) -> (remaining, result)
+                                let rec skipToNextToken tokens currentDepth =
+                                    match tokens with
+                                    | { Token = If; Position = _ } :: rest -> skipToNextToken rest (currentDepth + 1)
+                                    | { Token = Else; Position = _ } :: rest when currentDepth = 0 -> rest
+                                    | _ :: rest -> skipToNextToken rest currentDepth
+                                    | [] -> []
+                                let remainingTokens = skipToNextToken rest 0
+                                (remainingTokens, result) 
                             | _ :: rest -> skipElsePart rest depth
                             | [] -> (tokens, result)
 
