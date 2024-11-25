@@ -1,7 +1,5 @@
 ﻿namespace Interpreter
 
-open Types
-
 module Interpreter =
     let run (mode: Mode, debug: bool, filePath: string option) =
         match mode with
