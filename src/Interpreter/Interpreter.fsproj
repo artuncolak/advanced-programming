@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Evaluate.fs" />
+    <Compile Include="ScriptRunner.fs" />
+    <Compile Include="Repl.fs" />
+    <Compile Include="Interpreter.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Parser\Parser.fsproj" />
+    <ProjectReference Include="..\SharedTypes\SharedTypes.fsproj" />
+    <ProjectReference Include="..\SymbolTable\SymbolTable.fsproj" />
+    <ProjectReference Include="..\Lexer\Lexer.fsproj" />
+  </ItemGroup>
+</Project>
