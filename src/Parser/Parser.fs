@@ -17,8 +17,6 @@ module Parser =
                     match condition with
                     | Int 0
                     | Float 0.0 ->
-                        // Condition is false, skip the then part and look for else
-                        System.Console.WriteLine("Condition is false")
                         let rec skipThenPart tokens depth =
                             match tokens with
                             | { Token = If; Position = _ } :: rest -> skipThenPart rest (depth + 1)
@@ -44,8 +42,9 @@ module Parser =
                                     | { Token = Else; Position = _ } :: rest when currentDepth = 0 -> rest
                                     | _ :: rest -> skipToNextToken rest currentDepth
                                     | [] -> []
+
                                 let remainingTokens = skipToNextToken rest 0
-                                (remainingTokens, result) 
+                                (remainingTokens, result)
                             | _ :: rest -> skipElsePart rest depth
                             | [] -> (tokens, result)
 
@@ -158,16 +157,20 @@ module Parser =
 
         and NR tList =
             match tList with
-            | { Token = Num value; Position = _ } :: tail -> (tail, value)
-            | { Token = Var v; Position = _ } :: tail -> (tail, SymbolTable.get v)
+            | { Token = StringLiteral s; Position = _ } :: tail -> 
+                (tail, String s)
+            | { Token = Num value; Position = _ } :: tail -> 
+                (tail, value)
+            | { Token = Var v; Position = _ } :: tail -> 
+                (tail, SymbolTable.get v)
             | { Token = Lpar; Position = pos } :: tail ->
                 let (remaining, value) = E tail
 
                 match remaining with
                 | { Token = Rpar; Position = _ } :: rest -> (rest, value)
                 | _ ->
-                let offset = tail.Length
-                raise (System.Exception($"Parser error: Missing closing parenthesis"))
+                    let offset = tail.Length
+                    raise (System.Exception($"Parser error: Missing closing parenthesis"))
             | { Token = token; Position = pos } :: _ ->
                 raise (System.Exception($"Parser error: Unexpected token '{token}' at position {pos + 1}"))
             | [] -> raise (System.Exception("Parser error: Unexpected end of input"))

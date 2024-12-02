@@ -28,10 +28,21 @@ module Lexer =
             raise (System.Exception($"Lexer error: invalid float"))
         | _ -> (iStr, iVal)
 
+    let rec scanString (input: char list) (acc: string) =
+        match input with
+        | '"' :: rest -> (rest, acc)
+        | '\\' :: '"' :: rest -> scanString rest (acc + "\"")
+        | c :: rest -> scanString rest (acc + string c)
+        | [] -> raise (System.Exception("Lexer error: Unterminated string literal"))
+
     let run (input: string) : PositionedToken list =
         let rec scan (input: char list) (pos: int) =
             match input with
             | [] -> []
+            | '"' :: tail ->
+                let (remaining, str) = scanString tail ""
+                { Token = StringLiteral str; Position = pos } 
+                :: scan remaining (pos + str.Length + 2)  // +2 for quotes
             | 'i' :: 'f' :: tail when isblank (List.head tail) ->
                 { Token = If; Position = pos } :: scan (List.skipWhile isblank tail) (pos + 2)
             | 't' :: 'h' :: 'e' :: 'n' :: tail when isblank (List.head tail) ->

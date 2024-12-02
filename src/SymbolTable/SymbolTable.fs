@@ -26,6 +26,7 @@ module SymbolTable =
             symbolTable
             |> Map.iter (fun k v ->
                 match v with
+                | String s -> printfn "  %c = String \"%s\"" k s
                 | Float f -> printfn "  %c = Float %.1f" k f
                 | Int i -> printfn "  %c = Int %d" k i)
 

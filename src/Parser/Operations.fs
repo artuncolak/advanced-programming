@@ -5,6 +5,11 @@ open SharedTypes
 
 let add (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
+    | String s1, String s2 -> String(s1 + s2)
+    | String s, Int i -> String(s + string i)
+    | Int i, String s -> String(string i + s)
+    | String s, Float f -> String(s + string f)
+    | Float f, String s -> String(string f + s)
     | Float f1, Float f2 -> Float(f1 + f2)
     | Float f, Int i -> Float(f + float i)
     | Int i, Float f -> Float(float i + f)

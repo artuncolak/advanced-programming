@@ -5,6 +5,7 @@ type Variable = char
 type RealNum =
     | Float of float
     | Int of int
+    | String of string
 
 type Terminal =
     | Add
@@ -29,5 +30,6 @@ type Terminal =
     | Ge
     | Lt
     | Le
+    | StringLiteral of string
 
 type PositionedToken = { Token: Terminal; Position: int }
