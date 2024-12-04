@@ -31,3 +31,11 @@ type Terminal =
     | Le
 
 type PositionedToken = { Token: Terminal; Position: int }
+
+type ExpressionResult =
+  | ValidOutput of string
+  | DivideByZeroError of string
+  | LexerError of string
+  | ParserError of string
+  | GeneralError of string
+
