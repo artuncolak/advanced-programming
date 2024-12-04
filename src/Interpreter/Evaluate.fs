@@ -6,7 +6,15 @@ open Lexer
 open SymbolTable
 open Parser
 
-let run (input: string, debug: bool) =
+let resultToString x =
+    match x with
+    | ValidOutput (value) -> string value
+    | DivideByZeroError (value) -> string value
+    | LexerError (value) -> string value
+    | ParserError (value) -> string value
+    | GeneralError (value) -> string value
+
+let run (input: string, debug: bool) : ExpressionResult =
     try
         if debug then
             Console.ForegroundColor <- ConsoleColor.Green
@@ -26,13 +34,12 @@ let run (input: string, debug: bool) =
             Console.ResetColor()
 
         match remaining with
-        | [] -> Utils.formatResult result
+        | [] -> ValidOutput (Utils.formatResult result)
         | { Token = t; Position = p } :: _ ->
-            let offset = remaining.Length
             raise (Exception($"Parser error: Unexpected token '{t}' at position {p + 1}"))
 
     with
-    | :? DivideByZeroException -> "Error: Division by zero"
-    | ex when ex.Message.StartsWith("Lexer error") -> ex.Message
-    | ex when ex.Message.StartsWith("Parser error") -> ex.Message
-    | ex -> sprintf "Error: %s" ex.Message
+    | :? DivideByZeroException -> DivideByZeroError "Cannot divide by 0"
+    | ex when ex.Message.StartsWith("Lexer error") -> LexerError ex.Message
+    | ex when ex.Message.StartsWith("Parser error") -> ParserError ex.Message
+    | ex -> GeneralError ex.Message
