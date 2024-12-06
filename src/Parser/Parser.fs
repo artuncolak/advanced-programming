@@ -55,6 +55,7 @@ module Parser =
 
                 match remaining with
                 | { Token = Rpar; Position = _ } :: rest ->
+                    printfn "%s" (Utils.formatResult value)
                     (rest, value)
                 | _ -> raise (System.Exception("Parser error: Expected closing parenthesis ')' after print expression"))
             | { Token = VarKeyword; Position = _ } :: { Token = Var v; Position = _ } :: tail ->
