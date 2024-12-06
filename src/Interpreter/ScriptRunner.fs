@@ -16,7 +16,7 @@ let run (filePath: string, debug: bool) =
                       raise (Exception($"{value} on line number {lineNumber + 1}"))
                   | ParserError (value) ->
                       raise (Exception($"{value} on line number {lineNumber + 1}"))
-                  | GeneralError (value) ->
+                  | ArgumentError (value) ->
                       raise (Exception($"{value} on line number {lineNumber + 1}"))
                   | ValidOutput (value) ->
                       ()

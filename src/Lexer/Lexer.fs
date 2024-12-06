@@ -12,6 +12,7 @@ module Lexer =
                     match iVal with
                     | Float f -> f
                     | Int i -> float i
+                    | String _ -> raise (System.Exception("Argument error: Invalid string operation"))
 
                 let newVal = decimalVal + float (intVal c) * multiplier
                 scNum (tail, Float newVal, isDecimal, multiplier / 10.0)
@@ -20,6 +21,7 @@ module Lexer =
                     match iVal with
                     | Float f -> int f
                     | Int i -> i
+                    | String _ -> raise (System.Exception("Argument error: Invalid string operation"))
 
                 scNum (tail, Int(10 * newVal + intVal c), isDecimal, multiplier)
         | '.' :: tail when not isDecimal ->

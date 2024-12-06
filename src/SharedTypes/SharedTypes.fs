@@ -39,5 +39,4 @@ type ExpressionResult =
   | DivideByZeroError of string
   | LexerError of string
   | ParserError of string
-  | GeneralError of string
-
+  | ArgumentError of string

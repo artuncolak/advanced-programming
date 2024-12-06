@@ -76,6 +76,9 @@ module Parser =
                 | (Float f1, Float f2) -> (tLst, if f1 = f2 then Int 1 else Int 0)
                 | (Int i, Float f) -> (tLst, if float i = f then Int 1 else Int 0)
                 | (Float f, Int i) -> (tLst, if f = float i then Int 1 else Int 0)
+                | (String s1, String s2) -> (tLst, if s1 = s2 then Int 1 else Int 0)
+                | (String _, _) -> (tLst, Int 0)
+                | (_, String _) -> (tLst, Int 0)
             | { Token = Ne; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
 
@@ -84,6 +87,9 @@ module Parser =
                 | (Float f1, Float f2) -> (tLst, if f1 <> f2 then Int 1 else Int 0)
                 | (Int i, Float f) -> (tLst, if float i <> f then Int 1 else Int 0)
                 | (Float f, Int i) -> (tLst, if f <> float i then Int 1 else Int 0)
+                | (String s1, String s2) -> (tLst, if s1 <> s2 then Int 1 else Int 0)
+                | (String _, _) -> raise (System.Exception("Argument error: Invalid string operation"))
+                | (_, String _) -> raise (System.Exception("Argument error: Invalid string operation"))
             | { Token = Gt; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
 
@@ -92,6 +98,8 @@ module Parser =
                 | (Float f1, Float f2) -> (tLst, if f1 > f2 then Int 1 else Int 0)
                 | (Int i, Float f) -> (tLst, if float i > f then Int 1 else Int 0)
                 | (Float f, Int i) -> (tLst, if f > float i then Int 1 else Int 0)
+                | (String _, _) -> raise (System.Exception("Argument error: Invalid string operation"))
+                | (_, String _) -> raise (System.Exception("Argument error: Invalid string operation"))
             | { Token = Ge; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
 
@@ -100,6 +108,8 @@ module Parser =
                 | (Float f1, Float f2) -> (tLst, if f1 >= f2 then Int 1 else Int 0)
                 | (Int i, Float f) -> (tLst, if float i >= f then Int 1 else Int 0)
                 | (Float f, Int i) -> (tLst, if f >= float i then Int 1 else Int 0)
+                | (String _, _) -> raise (System.Exception("Argument error: Invalid string operation"))
+                | (_, String _) -> raise (System.Exception("Argument error: Invalid string operation"))
             | { Token = Lt; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
 
@@ -108,6 +118,8 @@ module Parser =
                 | (Float f1, Float f2) -> (tLst, if f1 < f2 then Int 1 else Int 0)
                 | (Int i, Float f) -> (tLst, if float i < f then Int 1 else Int 0)
                 | (Float f, Int i) -> (tLst, if f < float i then Int 1 else Int 0)
+                | (String _, _) -> raise (System.Exception("Argument error: Invalid string operation"))
+                | (_, String _) -> raise (System.Exception("Argument error: Invalid string operation"))
             | { Token = Le; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
 
@@ -116,6 +128,8 @@ module Parser =
                 | (Float f1, Float f2) -> (tLst, if f1 <= f2 then Int 1 else Int 0)
                 | (Int i, Float f) -> (tLst, if float i <= f then Int 1 else Int 0)
                 | (Float f, Int i) -> (tLst, if f <= float i then Int 1 else Int 0)
+                | (String _, _) -> raise (System.Exception("Argument error: Invalid string operation"))
+                | (_, String _) -> raise (System.Exception("Argument error: Invalid string operation"))
             | { Token = Add; Position = _ } :: tail ->
                 let (tLst, tval) = T tail
                 Eopt(tLst, Operations.add value tval)

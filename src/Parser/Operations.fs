@@ -17,6 +17,8 @@ let add (x: RealNum) (y: RealNum) : RealNum =
 
 let sub (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
+    | (_, String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | (String _, _) -> raise (Exception("Argument error: Invalid string operation"))
     | Float f1, Float f2 -> Float(f1 - f2)
     | Float f, Int i -> Float(f - float i)
     | Int i, Float f -> Float(float i - f)
@@ -24,6 +26,8 @@ let sub (x: RealNum) (y: RealNum) : RealNum =
 
 let mul (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
+    | (_, String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | (String _, _) -> raise (Exception("Argument error: Invalid string operation"))
     | Float f1, Float f2 -> Float(f1 * f2)
     | Float f, Int i -> Float(f * float i)
     | Int i, Float f -> Float(float i * f)
@@ -31,6 +35,8 @@ let mul (x: RealNum) (y: RealNum) : RealNum =
 
 let div (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
+    | (_, String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | (String _, _) -> raise (Exception("Argument error: Invalid string operation"))
     | _, Int 0 -> raise (DivideByZeroException "Division by zero")
     | _, Float f when f = 0.0 -> raise (DivideByZeroException "Division by zero")
     | Float f1, Float f2 -> Float(f1 / f2)
@@ -40,6 +46,8 @@ let div (x: RealNum) (y: RealNum) : RealNum =
 
 let modulo (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
+    | (_, String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | (String _, _) -> raise (Exception("Argument error: Invalid string operation"))
     | _, Int 0 -> raise (DivideByZeroException "Modulo by zero")
     | _, Float f when f = 0.0 -> raise (DivideByZeroException "Modulo by zero")
     | Float f1, Float f2 -> Float(f1 % f2)
@@ -49,6 +57,8 @@ let modulo (x: RealNum) (y: RealNum) : RealNum =
 
 let pow (x: RealNum) (y: RealNum) : RealNum =
     match x, y with
+    | (_, String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | (String _, _) -> raise (Exception("Argument error: Invalid string operation"))
     | Float f1, Float f2 -> Float(f1 ** f2)
     | Float f, Int i -> Float(f ** float i)
     | Int i, Float f -> Float(float i ** f)
@@ -57,5 +67,6 @@ let pow (x: RealNum) (y: RealNum) : RealNum =
 
 let neg (x: RealNum) : RealNum =
     match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
     | Float f -> Float(-f)
     | Int i -> Int(-i)

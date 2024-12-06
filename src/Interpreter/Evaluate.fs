@@ -12,7 +12,7 @@ let resultToString x =
     | DivideByZeroError (value) -> string value
     | LexerError (value) -> string value
     | ParserError (value) -> string value
-    | GeneralError (value) -> string value
+    | ArgumentError (value) -> string value
 
 let run (input: string, debug: bool) : ExpressionResult =
     try
@@ -42,4 +42,4 @@ let run (input: string, debug: bool) : ExpressionResult =
     | :? DivideByZeroException -> DivideByZeroError "Cannot divide by 0"
     | ex when ex.Message.StartsWith("Lexer error") -> LexerError ex.Message
     | ex when ex.Message.StartsWith("Parser error") -> ParserError ex.Message
-    | ex -> GeneralError ex.Message
+    | ex when ex.Message.StartsWith("Argument error") -> ArgumentError ex.Message
