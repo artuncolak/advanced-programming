@@ -40,3 +40,4 @@ type ExpressionResult =
   | LexerError of string
   | ParserError of string
   | ArgumentError of string
+  | VariableError of string

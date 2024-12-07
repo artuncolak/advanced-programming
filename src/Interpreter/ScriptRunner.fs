@@ -18,6 +18,8 @@ let run (filePath: string, debug: bool) =
                       raise (Exception($"{value} on line number {lineNumber + 1}"))
                   | ArgumentError (value) ->
                       raise (Exception($"{value} on line number {lineNumber + 1}"))
+                  | VariableError (value) ->
+                      raise (Exception($"{value} on line number {lineNumber + 1}"))
                   | ValidOutput (value) ->
                       ()
     with

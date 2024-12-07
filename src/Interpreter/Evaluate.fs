@@ -13,6 +13,7 @@ let resultToString x =
     | LexerError (value) -> string value
     | ParserError (value) -> string value
     | ArgumentError (value) -> string value
+    | VariableError (value) -> string value
 
 let run (input: string, debug: bool) : ExpressionResult =
     try
@@ -43,3 +44,4 @@ let run (input: string, debug: bool) : ExpressionResult =
     | ex when ex.Message.StartsWith("Lexer error") -> LexerError ex.Message
     | ex when ex.Message.StartsWith("Parser error") -> ParserError ex.Message
     | ex when ex.Message.StartsWith("Argument error") -> ArgumentError ex.Message
+    | ex when ex.Message.StartsWith("Variable") -> VariableError ex.Message
