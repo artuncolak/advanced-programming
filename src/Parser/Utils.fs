@@ -2,8 +2,11 @@ module Utils
 
 open SharedTypes
 
+let formatFloat (f: float) : string =
+    sprintf "%.15f" f
+
 let formatResult (result: RealNum) : string =
     match result with
     | String s -> sprintf "\"%s\"" s
-    | Float f -> sprintf "%.15f" f
+    | Float f -> formatFloat f
     | Int i -> string i
