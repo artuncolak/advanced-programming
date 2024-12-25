@@ -30,6 +30,7 @@ type Terminal =
     | Ge
     | Lt
     | Le
+    | Log
     | StringLiteral of string
 
 type PositionedToken = { Token: Terminal; Position: int }

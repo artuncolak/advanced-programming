@@ -64,6 +64,8 @@ module Parser =
                     let (remaining, value) = E rest
                     (remaining, SymbolTable.set v value)
                 | _ -> raise (System.Exception("Parser error: Expected '=' after variable declaration"))
+            | { Token = Log; Position = _ } :: { Token = Sub; Position = _ } :: tail -> raise (System.Exception("Parser error: Expected positive interger after log"))
+
             | _ -> (T >> Eopt) tList
 
         and Eopt (tList, value: RealNum) =
@@ -167,6 +169,9 @@ module Parser =
             | { Token = Sub; Position = _ } :: tail ->
                 let (tLst, tval) = NR tail
                 (tLst, Operations.neg tval)
+            | { Token = Log; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.log tval)
             | _ -> NR tList
 
         and NR tList =
