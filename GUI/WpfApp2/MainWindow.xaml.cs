@@ -25,12 +25,12 @@ namespace WpfGui
     {
 
         private Logger _b;
-        public string myText { get; set; }
+        public string LogText { get; set; }
         public MainWindow()
         {
             InitializeComponent();
             _b  = new Logger(5);
-            myText = "";
+            LogText = "";
 
         }
 
@@ -75,50 +75,33 @@ namespace WpfGui
             Debug.WriteLine(userOutput);
             ExpressionOutput.Text = output;  // send either direct or parsed output - it is direct as of now
 
-            _b.setLogs($"{expressionText}: {output}");
+            _b.setLogs($"{expressionText} :- {output}");
 
-            string[] ss = _b.getLogs();
+            string[] logArr = _b.getLogs();
             Debug.WriteLine("yayy",_b.getLogs());
 
-            TextBlock textBlock = (TextBlock)FindName("Logsss");
+            TextBlock textBlock = (TextBlock)FindName("Logs");
             textBlock.Text = "";
 
-            for (int i = 0; i < ss.Length; i++)
+            for (int i = 0; i < logArr.Length; i++)
             {
                 Debug.Write("logs");
-                Debug.WriteLine(ss[i]);
-                textBlock.Text += "\n"+ss[i];
+                Debug.WriteLine(logArr[i]);
+                textBlock.Text += "\n"+logArr[i];
                 
             }
 
             Debug.Write("mytext");
-            Debug.WriteLine(myText);
+            Debug.WriteLine(LogText);
 
         }
-
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            //string userText = UserInputText.Text;
-            // evaluate expression on enter
-
-        }
-
+     
         private void ExpressionInput_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
                     Calculate_Expression(sender, e);
             }
-        }
-
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void TextBox_TextChanged_1(object sender, TextChangedEventArgs e)
-        {
-
         }
 
         private void Plot_Polynomial(object sender, RoutedEventArgs e) {
@@ -159,9 +142,9 @@ namespace WpfGui
 
             for (double i = initialValue; i < finalValue; i = i + stepInput)
             {
-                SharedTypes.ExpressionResult tr = Interpreter.Interpreter.evaluate($"var x={i}");
-                Debug.Write("asda ss ");
-                Debug.WriteLine(tr);
+                SharedTypes.ExpressionResult plotX = Interpreter.Interpreter.evaluate($"var x={i}");
+                Debug.Write("asda logArr ");
+                Debug.WriteLine(plotX);
                 Debug.WriteLine($"x={i}");
                 Debug.WriteLine(polynomialText);
                 SharedTypes.ExpressionResult plotY = Interpreter.Interpreter.evaluate(polynomialText);
@@ -188,17 +171,6 @@ namespace WpfGui
             plot_graph(xArr, yArr, polynomialText);
             count++;
 
-        }
-
-        private void Button_Click1(object sender, RoutedEventArgs e)
-        {
-            
-            //WpfPlot1.Plot.Add.Scatter(array11, array22);
-            //WpfPlot1.Refresh();
-            //WpfPlot1.Focus();
-            //WpfPlot1.UpdateLayout();
-
-            //WpfPlot1.PlotStyle.DotStyle
         }
 
         private void plot_graph(double[] xData, double[] yData, string plotName)
@@ -251,7 +223,7 @@ namespace WpfGui
         {
             if (logs.Count == 6)
             {
-                logs = [];
+                logs.RemoveAt(0);
             }
 
             logs.Add(str);
@@ -262,5 +234,3 @@ namespace WpfGui
     }
 }
 
-// ADDITIONS TO UI:
-//1. add history of the commands and results into the UI for interpreter

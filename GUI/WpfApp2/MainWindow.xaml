@@ -32,14 +32,36 @@
         <Grid Grid.Column="1" Grid.Row="0" x:Name="Grid2">
             <!-- Grid2 content -->
             <StackPanel FlowDirection="LeftToRight" Margin="10">
-            <TextBlock HorizontalAlignment="Center" Margin="0" TextWrapping="Wrap" Text="Valid Symbols" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
-            <TextBlock TextWrapping="Wrap" Margin="0" Text="Operators: +,-,*,/,%,^,(,),log,var" Foreground="Black" FontSize="14" FontWeight="Bold"/>
-            <TextBlock TextWrapping="Wrap" Margin="0" Text="Variable Declaration: var x, var y" Foreground="Black" FontSize="14" FontWeight="Bold"/>
-            <TextBlock TextWrapping="Wrap" Margin="0" Text="3. Negative and 0 value for logs are not valid" Foreground="Black" FontSize="14" FontWeight="Bold"/>
-            <TextBlock TextWrapping="Wrap" Margin="0" Text="Logarithm: log1,log2,logx,logy" Foreground="Black" FontSize="14" FontWeight="Bold"/>
-                <TextBlock x:Name="Logsss" Text="{Binding myText}" HorizontalAlignment="Center" Margin="0" TextWrapping="Wrap"  VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
-                </StackPanel>
 
+            <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="PLOTTER" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
+
+             <Border BorderThickness="0 1 0 0" Margin="0 30 0 10" BorderBrush="Black">
+                    <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Write a Polynomial in x:" VerticalAlignment="Top" Width="auto" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+   
+             </Border>  
+            <TextBox x:Name="PolynomialInput" HorizontalAlignment="Left" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="200" Height="25" FontWeight="ExtraBold" Padding="3"/>
+            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Eg. x^2+1, 2*x-1, x*logx+1..." VerticalAlignment="Top" Width="auto" Foreground="Black" FontSize="11" FontWeight="Medium"/>
+
+                <Border BorderThickness="0 1 0 0" Margin="0 30 0 10" BorderBrush="Black">
+                    <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Range of x:" VerticalAlignment="Top" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+   
+             </Border>  
+            <TextBox x:Name="PolynomialRange" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0,10" VerticalAlignment="Top" Width="100"  RenderTransformOrigin="1.387,0.382" Height="26" FontWeight="ExtraBold" Padding="3"/>
+            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Syntax: intial value, final value" VerticalAlignment="Top" Width="auto" Foreground="Black" FontSize="11" FontWeight="Medium"/>
+
+             <Border BorderThickness="0 1 0 0" Margin="0 30 0 10" BorderBrush="Black">
+
+                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Step of x: " VerticalAlignment="Top" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+            </Border>
+            <TextBox x:Name="PolynomialStep" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0.1" VerticalAlignment="Top" Width="100" RenderTransformOrigin="0.255,-5.251" Height="24" FontWeight="ExtraBold" Padding="3"/>
+            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Increase in x for each step" VerticalAlignment="Top" Width="auto" Foreground="Black" FontSize="11" FontWeight="Medium"/>
+
+                <Border BorderThickness="0 1 0 0" Margin="0 30 0 10" BorderBrush="Black" Padding="10">
+                <Button  Content="Plot" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Plot_Polynomial" Height="28" Width="150" Background="#eee" FontWeight="Bold" Cursor="Hand"/>
+
+            </Border>
+                
+             </StackPanel>
             <Border BorderBrush="#EEE" BorderThickness="2"/>
 
         </Grid>
@@ -49,19 +71,41 @@
             <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="- CALCULATOR -" VerticalAlignment="Top" Foreground="#FFFDF9F9" FontSize="20" FontWeight="Bold"/>
             <TextBlock x:Name="LastLog" HorizontalAlignment="Left" TextWrapping="Wrap" Text="- OUTPUT -" VerticalAlignment="Top" Foreground="#FFF" Height="28" Width="445" FontSize="20" FontWeight="Bold" RenderTransformOrigin="0.506,-1" Margin="307,9,0,0"/>
          -->
-            <StackPanel FlowDirection="LeftToRight" Margin="10">
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width = "1*" />
+                    <ColumnDefinition Width = "1*" />
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height = "1*" />
+                </Grid.RowDefinitions>
+             
+                <Grid x:Name="Grid5" Grid.Row="0" Grid.Column="0"  >
+                <StackPanel FlowDirection="LeftToRight" Margin="10">
                 
 
-             <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="--- PLOTTER ---" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
-            <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="Write a Polynomial in x:" VerticalAlignment="Top" Width="180" Foreground="Black" FontSize="14"/>
-            <TextBox x:Name="PolynomialInput" HorizontalAlignment="Left" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="140" TextChanged="TextBox_TextChanged" Height="25" FontWeight="Bold"/>
-            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Range of x:" VerticalAlignment="Top" Foreground="Black" FontSize="14"/>
-            <TextBox x:Name="PolynomialRange" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0,10" VerticalAlignment="Top" Width="72" TextChanged="TextBox_TextChanged_1" RenderTransformOrigin="1.387,0.382" Height="26" FontWeight="Bold"/>
-            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Step of x: " VerticalAlignment="Top" Foreground="Black" FontSize="14"/>
-            <TextBox x:Name="PolynomialStep" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0.1" VerticalAlignment="Top" Width="72" RenderTransformOrigin="0.255,-5.251" Height="24" FontWeight="Bold"/>
-            <Button  Content="Plot" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Plot_Polynomial" Height="28" Width="114" Background="#FFD5DFE1" FontWeight="Bold" Cursor="Hand"/>
+                 <TextBlock HorizontalAlignment="Center" Margin="0" TextWrapping="Wrap" Text="Valid Symbols" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
+                 <TextBlock TextWrapping="Wrap" Margin="0 5" Text="1. Operators: + , - , * , / , % , ^ , ( , ) , log , var " Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+                 <TextBlock TextWrapping="Wrap" Margin="0 5" Text="2. Variable Declaration: var x=3, var y=4" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+                 <TextBlock TextWrapping="Wrap" Margin="0 5" Text="3. Logarithm: log1 ,log2 ,logx ,logy" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+                 <TextBlock TextWrapping="Wrap" Margin="0 5" Text="4. Negative and 0 value for logs are not valid" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+                 <TextBlock TextWrapping="Wrap" Margin="0 5" Text="5. Invalid symbols: log-2 , varx , var , ; , ^^ , ++ , -- " Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+                </StackPanel>
+                    
+                </Grid>
+                <Grid x:Name="Grid6" Grid.Row="0" Grid.Column="1"  >
+                     <TextBlock HorizontalAlignment="Center" Text="Logs (Input :- Output)"   Margin="0 10" TextWrapping="Wrap"  VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
+             <!--   <Border BorderThickness="0 2 0 0" Margin="0 30 0 10" BorderBrush="Black">
                 
-            </StackPanel>
+                </Border>  -->
+                 <TextBlock x:Name="Logs" Text="{Binding LogText}" HorizontalAlignment="Left"  Margin="10 30 10 10" TextWrapping="Wrap"  VerticalAlignment="Top" FontStyle="Italic" FontWeight="Medium" FontSize="12" Foreground="Black"/>
+                    <Border BorderBrush="#EEE" BorderThickness="2"/>
+
+                </Grid>
+
+            </Grid>
             <Border BorderBrush="#eee" BorderThickness="2"/>
         </Grid>
 
@@ -72,8 +116,8 @@
                 
 
             <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Enter an expression:" VerticalAlignment="Top" Height="22" Width="236" FontSize="18" Background="#00000000" Foreground="Black"/>
-            <TextBox x:Name="ExpressionInput" Margin="0,10,0,10"  PreviewKeyDown="ExpressionInput_PreviewKeyDown" HorizontalAlignment="Left"  TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="258" TextChanged="TextBox_TextChanged" Height="35" BorderThickness="2,3,2,3" Background="#FFF4F5F5" SelectionTextBrush="#FFA1A1A2" BorderBrush="#FF3E3E3F" SelectionBrush="#FFF6F4F4" FontSize="20" Foreground="#FF161515"/>
-            <TextBlock x:Name="ExpressionOutput" HorizontalAlignment="Center" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Foreground="#FFF" Height="127" Width="auto" MinWidth="400" FontSize="18" FontWeight="Bold" RenderTransformOrigin="0.506,-1" Background="#FF302F2F" Padding="10"/>
+            <TextBox x:Name="ExpressionInput" Margin="0,10,0,10"  PreviewKeyDown="ExpressionInput_PreviewKeyDown" HorizontalAlignment="Stretch"  TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="auto" Height="35" BorderThickness="2" Background="#FFF" SelectionTextBrush="#FFA1A1A2" BorderBrush="#FF3E3E3F" SelectionBrush="#FFF6F4F4" FontSize="20" Foreground="#FF161515"/>
+            <TextBlock x:Name="ExpressionOutput" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Foreground="#FFF" Height="127" Width="auto" MinWidth="400" FontSize="18" FontWeight="Bold" RenderTransformOrigin="0.506,-1" Background="#FF302F2F" Padding="10"/>
             </StackPanel>
             <Border BorderBrush="#eee" BorderThickness="2"/>
 
