@@ -86,3 +86,10 @@ let neg (x: RealNum) : RealNum =
     | (String _) -> raise (Exception("Argument error: Invalid string operation"))
     | Float f -> Float(-f)
     | Int i -> Int(-i)
+
+let log (x: RealNum) : RealNum =
+    match x with
+    | Int 0 -> raise (Exception("Argument error: Log of 0"))
+    | Float 0.0 -> raise (Exception("Argument error: Log of 0"))
+    | Float f -> Float(Math.Log(f))
+    | Int i -> Float(Math.Log(i))

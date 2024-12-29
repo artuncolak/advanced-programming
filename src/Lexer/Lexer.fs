@@ -70,6 +70,7 @@ module Lexer =
             | ')' :: tail -> { Token = Rpar; Position = pos } :: scan tail (pos + 1)
             | '=' :: tail -> { Token = Assign; Position = pos } :: scan tail (pos + 1)
             | 'p' :: 'r' :: 'i' :: 'n' :: 't' :: tail -> { Token = Print; Position = pos } :: scan tail (pos + 5)
+            | 'l' :: 'o' :: 'g' :: tail -> { Token = Log; Position = pos } :: scan tail (pos + 3)
             | c :: tail when System.Char.IsLetter(c) -> { Token = Var c; Position = pos } :: scan tail (pos + 1)
             | c :: tail when isblank c -> scan tail (pos + 1)
             | c :: tail when isdigit c ->
