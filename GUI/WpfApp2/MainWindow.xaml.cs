@@ -111,25 +111,59 @@ namespace WpfGui
             //string userText2 = rangeText.Text;
 
             //Debug.WriteLine(userText2);
-
-            bool hasALog = polynomialText.Contains("log");
-
-            string[] rangeText = PolynomialRange.Text.Split(',');
-            double initialValue = double.Parse(rangeText[0]);
-            double finalValue = double.Parse(rangeText[1]);
-
-            double stepInput = double.Parse(PolynomialStep.Text.ToString());
-
-            //int ttt = Interpreter.main([userText1]);
-
-
-            List<double> xList = new List<double> { };
-            List<double> yList = new List<double> { };
-
             if (polynomialText.Trim().Length == 0)
             {
                 ExpressionOutput.Text = "Empty polynomial expression!";
                 PolynomialInput.Text = "";
+                return;
+            }
+
+            bool hasALog = polynomialText.Contains("log");
+
+            if (PolynomialRange.Text.Trim().Length == 0)
+            {
+                ExpressionOutput.Text = "Empty polynomial range!";
+                PolynomialInput.Text = "0,10";
+                return;
+            }
+
+            bool hasCommaAsSeparator = PolynomialRange.Text.Contains(",");
+            bool noLettersRange =  Regex.IsMatch(PolynomialRange.Text.Trim(), @"^\d{1,}?.\d{1,},\d{1,}?.\d{1,}$|^\d{1,},\d{1,}$|^\d{1,}?.\d{1,},\d{1,}$|^\d{1,},\d{1,}.\d{1,}$");
+
+
+            if (!noLettersRange)
+            {
+                ExpressionOutput.Text = "Invalid range format!";
+                PolynomialRange.Text = "0,10";
+                return;
+            }
+
+            string[] rangeText = PolynomialRange.Text.Trim().Split(',');
+
+            Debug.Write("le");
+            Debug.WriteLine(rangeText.Length);
+            Debug.WriteLine(rangeText);
+
+
+            if (rangeText.Length != 2)
+            {
+                ExpressionOutput.Text = "Invalid range format!";
+                PolynomialRange.Text = "0,10";
+                return;
+            }
+
+            double initialValue = double.Parse(rangeText[0]);
+            double finalValue = double.Parse(rangeText[1]);
+
+            if (initialValue > finalValue)
+            {
+                ExpressionOutput.Text = "Final value must be greater than initial value.";
+                return;
+            }
+
+            if (Math.Abs(initialValue - finalValue) == 0)
+            {
+                ExpressionOutput.Text = "Initial, Final value must be not be same values.";
                 return;
             }
 
@@ -139,6 +173,38 @@ namespace WpfGui
                 ExpressionOutput.Text = "Log can only be plotted for positive integer values, update plotting range.";
                 return;
             }
+
+            if (PolynomialStep.Text.Trim().Length == 0)
+            {
+                ExpressionOutput.Text = "Empty polynomial step!";
+                PolynomialStep.Text = "0.1";
+                return;
+            }
+
+            bool noLetterStep =  Regex.IsMatch(PolynomialStep.Text.Trim(), @"^\d{1,}$|^\d{1,}?.\d{1,}$");
+
+            if (!noLetterStep)
+            {
+                ExpressionOutput.Text = "Invalid value in step!";
+                PolynomialStep.Text = "0.1";
+                return;
+            }
+
+            double stepInput = double.Parse(PolynomialStep.Text.ToString());
+
+            if (stepInput <= 0)
+            {
+                ExpressionOutput.Text = "Step should be greater than 0!";
+                PolynomialStep.Text = "0.1";
+                return;
+            }
+
+            //int ttt = Interpreter.main([userText1]);
+
+
+            List<double> xList = new List<double> { };
+            List<double> yList = new List<double> { };
+
 
             for (double i = initialValue; i < finalValue; i = i + stepInput)
             {

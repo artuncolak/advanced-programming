@@ -92,7 +92,9 @@
                  <TextBlock TextWrapping="Wrap" Margin="0 5" Text="3. Logarithm: log1 ,log2 ,logx ,logy" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
                  <TextBlock TextWrapping="Wrap" Margin="0 5" Text="4. Negative and 0 value for logs are not valid" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
                  <TextBlock TextWrapping="Wrap" Margin="0 5" Text="5. Invalid symbols: log-2 , varx , var , ; , ^^ , ++ , -- " Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
-                </StackPanel>
+                 <TextBlock TextWrapping="Wrap" Margin="0 5" Text="6. Valid plotter number format: 0.3 and not .3 " Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
+
+                    </StackPanel>
                     
                 </Grid>
                 <Grid x:Name="Grid6" Grid.Row="0" Grid.Column="1"  >
