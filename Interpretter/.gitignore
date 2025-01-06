@@ -484,7 +484,3 @@ $RECYCLE.BIN/
 *.swp
 
 script
-
-.DS_Store
-
-.vscode
