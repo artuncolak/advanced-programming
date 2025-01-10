@@ -26,11 +26,14 @@ namespace WpfGui
 
         private Logger _b;
         public string LogText { get; set; }
+
+        private List<ScottPlot.Plottables.Scatter> graph;
         public MainWindow()
         {
             InitializeComponent();
             _b  = new Logger(5);
             LogText = "";
+            graph = new List<ScottPlot.Plottables.Scatter> { };
 
         }
 
@@ -41,9 +44,6 @@ namespace WpfGui
             string expressionText = ExpressionInput.Text;
             //bool noLetters =  !Regex.IsMatch(userText, @"[a-zA-Z]");
 
-            //ErrorText.Text = "";
-            //ExpressionResult.Text = "";
-            //WarningText.Text = "";
 
             if (expressionText.Trim().Length <= 0)
             {
@@ -52,19 +52,14 @@ namespace WpfGui
                 return;
             }
 
-            //LastLog.Text = "";
             SharedTypes.ExpressionResult interpreterOutput = Interpreter.Interpreter.evaluate(expressionText);
-            //Debug.WriteLine("%d", output);
-            //_b.setLogs($"{expressionText}: {output}");
+          
 
             string output = interpreterOutput.ToString();
             string userOutput = "";
 
             if (output.Contains('"'))
             {
-                //string[] outs  = output.ToString().Split("\"");
-                //Debug.WriteLine(outs[0]);
-                //Debug.WriteLine(outs[1]);
                 userOutput = Check_Output(output);
             } else
             {
@@ -73,9 +68,9 @@ namespace WpfGui
 
             Debug.Write("user output: ");
             Debug.WriteLine(userOutput);
-            ExpressionOutput.Text = output;  // send either direct or parsed output - it is direct as of now
+            ExpressionOutput.Text = userOutput; 
 
-            _b.setLogs($"{expressionText} :- {output}");
+            _b.setLogs($"{expressionText} :- {userOutput}");
 
             string[] logArr = _b.getLogs();
             Debug.WriteLine("yayy",_b.getLogs());
@@ -108,9 +103,7 @@ namespace WpfGui
 
             string polynomialText = PolynomialInput.Text;
             ExpressionOutput.Text = "";
-            //string userText2 = rangeText.Text;
 
-            //Debug.WriteLine(userText2);
             if (polynomialText.Trim().Length == 0)
             {
                 ExpressionOutput.Text = "Empty polynomial expression!";
@@ -169,7 +162,6 @@ namespace WpfGui
 
             if (hasALog && initialValue <= 0)
             {
-                //MessageBox.Show("log can be calculated for only positive integers");
                 ExpressionOutput.Text = "Log can only be plotted for positive integer values, update plotting range.";
                 return;
             }
@@ -199,14 +191,10 @@ namespace WpfGui
                 return;
             }
 
-            //int ttt = Interpreter.main([userText1]);
-
-
             List<double> xList = new List<double> { };
             List<double> yList = new List<double> { };
 
-
-            for (double i = initialValue; i < finalValue; i = i + stepInput)
+            for (double i = initialValue; i <= finalValue; i = i + stepInput)
             {
                 SharedTypes.ExpressionResult plotX = Interpreter.Interpreter.evaluate($"var x={i}");
                 Debug.Write("asda logArr ");
@@ -215,45 +203,77 @@ namespace WpfGui
                 Debug.WriteLine(polynomialText);
                 SharedTypes.ExpressionResult plotY = Interpreter.Interpreter.evaluate(polynomialText);
 
-                //string[] returnOutput = Output.result.Output.Split(' ');
+                string plotYCheck = plotY.ToString();
 
+                if(!plotYCheck.Contains("ValidOutput"))
+                {
+                    ExpressionOutput.Text = "Invalid format of polynomial";
+                    return;
+                }
+               
                 Debug.Write("ttt---");
                 Debug.WriteLine(plotY);
                 xList.Add(i);
                 yList.Add(double.Parse(Check_Output(plotY.ToString())));
             }
 
-            //int tt = Interpreter.main([userText1]);
-
             double[] xArr = xList.ToArray();
             double[] yArr = yList.ToArray();
 
-
-            var graph = WpfPlot1.Plot.Add.Scatter(xArr, yArr);
-            graph.MarkerSize = 0;
-            graph.LineWidth = 2;
-            WpfPlot1.Refresh();
-            int count = 1;
-            plot_graph(xArr, yArr, polynomialText);
-            count++;
-
+            Plot_Graph(xArr, yArr, polynomialText);
+           
         }
 
-        private void plot_graph(double[] xData, double[] yData, string plotName)
+        private void Plot_Graph(double[] xData, double[] yData, string plotName)
         {
-            var graph = WpfPlot1.Plot.Add.Scatter(xData, yData);
-            graph.MarkerSize = 0;
-            graph.LineWidth = 2;
-            graph.LegendText = plotName;
+
+            var grap = WpfPlot1.Plot.Add.Scatter(xData, yData);
+            grap.MarkerSize = 0;
+            grap.LineWidth = 2;
+            grap.LegendText = plotName;
+            graph.Add(grap);
             WpfPlot1.Refresh();
         }
+
+        private void Clear_Plot(object sender, RoutedEventArgs e)
+        {
+            if (graph.Count != 0)
+            {
+                WpfPlot1.Plot.Remove(graph[0]);
+                graph.RemoveAt(0);
+
+            }
+            WpfPlot1.Refresh();
+
+
+
+        }
+        private void Clear_All_Plots(object sender, RoutedEventArgs e)
+        {
+            
+            if (graph.Count > 0)
+            {
+                int count = graph.Count;
+                while(count > 0)
+                {
+                    WpfPlot1.Plot.Remove(graph[count-1]);
+                    count--;
+                }
+               
+                graph.Clear();
+                WpfPlot1.Refresh();
+
+            }
+
+        }
+
 
         private string Check_Output(string output)
         {
             string[] outArr = output.ToString().Split("\"");
             Debug.WriteLine(outArr[0]);
             Debug.WriteLine(outArr[1]);
-            //userOutput = outs[1];
+            
             int lastIndex = outArr.Length - 1;
             for(int  i = 0; i < outArr.Length; i++)
             {
@@ -263,12 +283,11 @@ namespace WpfGui
             return outArr[outArr.Length - 2];
         }
 
-        
     }
 
     public class Logger
     {
-        //public string[] logs;
+        
         public List<string> logs;
 
         public Logger(int size)
