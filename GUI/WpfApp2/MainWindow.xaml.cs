@@ -267,6 +267,19 @@ namespace WpfGui
 
         }
 
+        private void Toggle_Marker(object sender, RoutedEventArgs e)
+        {
+            if (graph.Count != 0)
+            {
+                for (int i = 0; i < graph.Count; i++)
+                {
+                    graph[i].MarkerSize = graph[i].MarkerSize == 5 ? 0 : 5;
+                }
+                WpfPlot1.Refresh();
+
+            }
+        }
+
 
         private string Check_Output(string output)
         {

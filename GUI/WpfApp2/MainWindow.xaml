@@ -33,7 +33,7 @@
             <!-- Grid2 content -->
             <StackPanel FlowDirection="LeftToRight" Margin="10">
 
-          <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="PLOTTER" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/>
+          <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="PLOTTER" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Foreground="Black"/> 
 
              <Border BorderThickness="0 1 0 0" Margin="0 0 0 10" BorderBrush="Black">
                     <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Write a Polynomial in x:" VerticalAlignment="Top" Width="auto" Foreground="Black" FontSize="14" FontWeight="SemiBold"/>
@@ -56,10 +56,30 @@
             <TextBox x:Name="PolynomialStep" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0.1" VerticalAlignment="Top" Width="100" RenderTransformOrigin="0.255,-5.251" Height="24" FontWeight="ExtraBold" Padding="3"/>
             <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Increase in x for each step" VerticalAlignment="Top" Width="auto" Foreground="Black" FontSize="11" FontWeight="Medium"/>
 
-                <Border BorderThickness="0 1 0 0" Margin="0 20 0 10" BorderBrush="Black" Padding="10">
-                <Button  Content="Plot" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Plot_Polynomial" Height="28" Width="150" Background="#FFDAD8D8" FontWeight="Bold" Cursor="Hand"/>
+            <Border BorderThickness="0 1 0 0" Margin="0 30 0 10" BorderBrush="Black" Padding="10">
+                    <Grid Margin="0 10 0 0">
 
-            </Border>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width = "1*" />
+                            <ColumnDefinition Width = "1*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height = "1*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid x:Name="Grid9" Grid.Row="0" Grid.Column="0"  >
+
+                            <Button  Content="Plot polynomial" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Plot_Polynomial" Height="28" Width="150" Background="#FFDAD8D8" FontWeight="Bold" Cursor="Hand"/>
+
+                        </Grid>
+                        <Grid x:Name="Grid10" Grid.Row="0" Grid.Column="1"  >
+                             <Button  Content="Toggle markers" HorizontalAlignment="Center" VerticalAlignment="Top" Click="Toggle_Marker" Height="28" Width="150" Background="#eee" FontWeight="Bold" Cursor="Hand" Margin="0"/>
+
+                        </Grid>
+
+                    </Grid>
+                </Border>
                 
                 <Border BorderThickness="0 1 0 0" Margin="0 0 0 0" BorderBrush="Black" Padding="10">
                     <Grid>
