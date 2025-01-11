@@ -64,7 +64,7 @@ module Parser =
                     let (remaining, value) = E rest
                     (remaining, SymbolTable.set v value)
                 | _ -> raise (System.Exception("Parser error: Expected '=' after variable declaration"))
-            | { Token = Log; Position = _ } :: { Token = Sub; Position = _ } :: tail -> raise (System.Exception("Parser error: Expected positive interger after log"))
+            | { Token = Log; Position = _ } :: { Token = Sub; Position = _ } :: tail -> raise (System.Exception("Parser error: Expected positive integer after log"))
 
             | _ -> (T >> Eopt) tList
 
@@ -172,6 +172,33 @@ module Parser =
             | { Token = Log; Position = _ } :: tail ->
                 let (tLst, tval) = NR tail
                 (tLst, Operations.log tval)
+            | { Token = Sin; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.sin tval)
+            | { Token = Cos; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.cos tval)
+            | { Token = Tan; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.tan tval)
+            | { Token = Asin; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.asin tval)
+            | { Token = Acos; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.acos tval)
+            | { Token = Atan; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.atan tval)
+            | { Token = Sinh; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.sinh tval)
+            | { Token = Cosh; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.cosh tval)
+            | { Token = Tanh; Position = _ } :: tail ->
+                let (tLst, tval) = NR tail
+                (tLst, Operations.tanh tval)
             | _ -> NR tList
 
         and NR tList =
