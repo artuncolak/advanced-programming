@@ -31,6 +31,15 @@ type Terminal =
     | Lt
     | Le
     | Log
+    | Sin
+    | Cos
+    | Tan
+    | Asin
+    | Acos
+    | Atan
+    | Sinh
+    | Cosh
+    | Tanh
     | StringLiteral of string
 
 type PositionedToken = { Token: Terminal; Position: int }

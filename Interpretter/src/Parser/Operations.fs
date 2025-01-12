@@ -89,7 +89,63 @@ let neg (x: RealNum) : RealNum =
 
 let log (x: RealNum) : RealNum =
     match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
     | Int 0 -> raise (Exception("Argument error: Log of 0"))
     | Float 0.0 -> raise (Exception("Argument error: Log of 0"))
     | Float f -> Float(Math.Log(f))
     | Int i -> Float(Math.Log(i))
+
+let sin (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(sin(f))
+    | Int i -> Float(sin(i))
+
+let cos (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(cos(f))
+    | Int i -> Float(cos(i))
+
+let tan (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(tan(f))
+    | Int i -> Float(tan(i))
+
+let asin (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(asin(f))
+    | Int i -> Float(asin(i))
+
+let acos (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(acos(f))
+    | Int i -> Float(acos(i))
+
+let atan (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(atan(f))
+    | Int i -> Float(atan(i))
+
+let sinh (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(sinh(f))
+    | Int i -> Float(sinh(i))
+
+let cosh (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(cosh(f))
+    | Int i -> Float(cosh(i))
+
+let tanh (x: RealNum) : RealNum =
+    match x with
+    | (String _) -> raise (Exception("Argument error: Invalid string operation"))
+    | Float f -> Float(tanh(f))
+    | Int i -> Float(tanh(i))
+
