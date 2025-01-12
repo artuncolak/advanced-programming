@@ -1,0 +1,17 @@
+E        = VAR_DECL | T Eopt
+VAR_DECL = "var" VAR "=" E
+Eopt     = [("+" | "-") T Eopt]
+T        = P Topt
+Topt     = [("*" | "/" | "%") P Topt]
+P        = F Popt
+Popt     = ["^" F Popt]
+F        = ["-"] NR | TRIG | LOG
+TRIG     = ("sin" | "cos" | "tan" | "asin" | "acos" | "atan" | "sinh" | "cosh" | "tanh") NR
+LOG      = "log" NR
+NR       = number | VAR | "(" E ")"
+VAR      = letter
+number   = integer | float
+integer  = digit{digit}
+float    = digit{digit}"."digit{digit}
+digit    = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+letter   = "a" | "b" | ... | "z" | "A" | "B" | ... | "Z"
