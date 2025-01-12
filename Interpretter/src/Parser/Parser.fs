@@ -215,7 +215,6 @@ module Parser =
                 match remaining with
                 | { Token = Rpar; Position = _ } :: rest -> (rest, value)
                 | _ ->
-                    let offset = tail.Length
                     raise (System.Exception($"Parser error: Missing closing parenthesis"))
             | { Token = token; Position = pos } :: _ ->
                 raise (System.Exception($"Parser error: Unexpected token '{token}' at position {pos + 1}"))

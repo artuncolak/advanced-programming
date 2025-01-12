@@ -62,7 +62,7 @@ let modulo (x: RealNum) (y: RealNum) : RealNum =
         Float(f % float i)
     | Int i, Float f ->
       if Float(float i % f) < Float(0) then
-        Float(f % float i + float i)
+        Float(f % float i + f)
       else
         Float(float i % f)
     | Int i1, Int i2 ->
