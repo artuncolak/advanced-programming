@@ -23,7 +23,7 @@
         <Grid Grid.Column="0" Grid.Row="0" x:Name="Grid1">
             <!-- Grid1 content -->
             
-                <ScottPlot:WpfPlot x:Name="WpfPlot1" Height="auto" MinHeight="450" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                <ScottPlot:WpfPlot x:Name="WpfPlot" Height="auto" MinHeight="450" VerticalAlignment="Center" Margin="0,0,0,0"/>
             <Border BorderBrush="#EEE" BorderThickness="2"/>
 
 
@@ -161,7 +161,7 @@
 
             <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Enter an expression:" VerticalAlignment="Top" Height="22" Width="236" FontSize="18" Background="#00000000" Foreground="Black"/>
             <TextBox x:Name="ExpressionInput" Margin="0,10,0,10"  PreviewKeyDown="ExpressionInput_PreviewKeyDown" HorizontalAlignment="Stretch"  TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="auto" Height="35" BorderThickness="2" Background="#FFF" SelectionTextBrush="#FFA1A1A2" BorderBrush="#FF3E3E3F" SelectionBrush="#FFF6F4F4" FontSize="20" Foreground="#FF161515"/>
-            <TextBlock x:Name="ExpressionOutput" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Foreground="#FFF" Height="127" Width="auto" MinWidth="400" FontSize="18" FontWeight="Bold" RenderTransformOrigin="0.506,-1" Background="#FF302F2F" Padding="10"/>
+            <TextBlock x:Name="ExpressionOutput" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Foreground="#FFF" Height="127" Width="auto" MinWidth="400" FontSize="17" FontWeight="Bold" Background="#FF302F2F" Padding="10"/>
             </StackPanel>
             <Border BorderBrush="#eee" BorderThickness="2"/>
 

@@ -16,10 +16,10 @@
 
   <ItemGroup>
     <Reference Include="Interpreter">
-      <HintPath>..\..\src\Application\bin\Release\net8.0\Interpreter.dll</HintPath>
+      <HintPath>..\..\Interpretter\src\Application\bin\Release\net8.0\Interpreter.dll</HintPath>
     </Reference>
     <Reference Include="SharedTypes">
-      <HintPath>..\..\src\Application\bin\Release\net8.0\SharedTypes.dll</HintPath>
+      <HintPath>..\..\Interpretter\src\Application\bin\Release\net8.0\SharedTypes.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -24,16 +24,16 @@ namespace WpfGui
     public partial class MainWindow : Window
     {
 
-        private Logger _b;
+        private Logger _LogIns;
         public string LogText { get; set; }
 
-        private List<ScottPlot.Plottables.Scatter> graph;
+        private List<ScottPlot.Plottables.Scatter> Graph;
         public MainWindow()
         {
             InitializeComponent();
-            _b  = new Logger(5);
+            _LogIns  = new Logger(5);
             LogText = "";
-            graph = new List<ScottPlot.Plottables.Scatter> { };
+            Graph = new List<ScottPlot.Plottables.Scatter> { };
 
         }
 
@@ -70,10 +70,10 @@ namespace WpfGui
             Debug.WriteLine(userOutput);
             ExpressionOutput.Text = userOutput; 
 
-            _b.setLogs($"{expressionText} :- {userOutput}");
+            _LogIns.setLogs($"{expressionText} :- {userOutput}");
 
-            string[] logArr = _b.getLogs();
-            Debug.WriteLine("yayy",_b.getLogs());
+            string[] logArr = _LogIns.getLogs();
+            Debug.WriteLine("yayy",_LogIns.getLogs());
 
             TextBlock textBlock = (TextBlock)FindName("Logs");
             textBlock.Text = "";
@@ -121,7 +121,7 @@ namespace WpfGui
             }
 
             bool hasCommaAsSeparator = PolynomialRange.Text.Contains(",");
-            bool noLettersRange =  Regex.IsMatch(PolynomialRange.Text.Trim(), @"^\d{1,}?.\d{1,},\d{1,}?.\d{1,}$|^\d{1,},\d{1,}$|^\d{1,}?.\d{1,},\d{1,}$|^\d{1,},\d{1,}.\d{1,}$");
+            bool noLettersRange =  Regex.IsMatch(PolynomialRange.Text.Trim(), @"^[-]?\d{1,}?.[-]?\d{1,},[-]?\d{1,}?.[-]?\d{1,}$|^[-]?\d{1,},[-]?\d{1,}$|^[-]?\d{1,}?.[-]?\d{1,},[-]?\d{1,}$|^[-]?\d{1,},[-]?\d{1,}.[-]?\d{1,}$");
 
 
             if (!noLettersRange)
@@ -154,7 +154,7 @@ namespace WpfGui
                 return;
             }
 
-            if (Math.Abs(initialValue - finalValue) == 0)
+            if (initialValue - finalValue == 0)
             {
                 ExpressionOutput.Text = "Initial, Final value must be not be same values.";
                 return;
@@ -227,23 +227,23 @@ namespace WpfGui
         private void Plot_Graph(double[] xData, double[] yData, string plotName)
         {
 
-            var grap = WpfPlot1.Plot.Add.Scatter(xData, yData);
-            grap.MarkerSize = 0;
-            grap.LineWidth = 2;
-            grap.LegendText = plotName;
-            graph.Add(grap);
-            WpfPlot1.Refresh();
+            var currentGraph = WpfPlot.Plot.Add.Scatter(xData, yData);
+            currentGraph.MarkerSize = 0;
+            currentGraph.LineWidth = 2;
+            currentGraph.LegendText = plotName;
+            Graph.Add(currentGraph);
+            WpfPlot.Refresh();
         }
 
         private void Clear_Plot(object sender, RoutedEventArgs e)
         {
-            if (graph.Count != 0)
+            if (Graph.Count != 0)
             {
-                WpfPlot1.Plot.Remove(graph[0]);
-                graph.RemoveAt(0);
+                WpfPlot.Plot.Remove(Graph[0]);
+                Graph.RemoveAt(0);
 
             }
-            WpfPlot1.Refresh();
+            WpfPlot.Refresh();
 
 
 
@@ -251,17 +251,17 @@ namespace WpfGui
         private void Clear_All_Plots(object sender, RoutedEventArgs e)
         {
             
-            if (graph.Count > 0)
+            if (Graph.Count > 0)
             {
-                int count = graph.Count;
+                int count = Graph.Count;
                 while(count > 0)
                 {
-                    WpfPlot1.Plot.Remove(graph[count-1]);
+                    WpfPlot.Plot.Remove(Graph[count-1]);
                     count--;
                 }
                
-                graph.Clear();
-                WpfPlot1.Refresh();
+                Graph.Clear();
+                WpfPlot.Refresh();
 
             }
 
@@ -269,13 +269,13 @@ namespace WpfGui
 
         private void Toggle_Marker(object sender, RoutedEventArgs e)
         {
-            if (graph.Count != 0)
+            if (Graph.Count != 0)
             {
-                for (int i = 0; i < graph.Count; i++)
+                for (int i = 0; i < Graph.Count; i++)
                 {
-                    graph[i].MarkerSize = graph[i].MarkerSize == 5 ? 0 : 5;
+                    Graph[i].MarkerSize = Graph[i].MarkerSize == 5 ? 0 : 5;
                 }
-                WpfPlot1.Refresh();
+                WpfPlot.Refresh();
 
             }
         }
@@ -283,17 +283,23 @@ namespace WpfGui
 
         private string Check_Output(string output)
         {
-            string[] outArr = output.ToString().Split("\"");
-            Debug.WriteLine(outArr[0]);
-            Debug.WriteLine(outArr[1]);
-            
-            int lastIndex = outArr.Length - 1;
-            for(int  i = 0; i < outArr.Length; i++)
+           
+            Debug.Write("actual output");
+            Debug.WriteLine(output);
+
+            Regex regex = new Regex(@"""\""?([^""]*)\""?""");
+            Match match  = regex.Match(output);
+            string matchedContent = "";
+            if (match.Success) {
+                matchedContent = match.Value.Substring(1, match.Value.Length-2);
+                
+            } else
             {
-                Debug.Write("arr");
-                Debug.WriteLine(outArr[i]);
+                matchedContent = "0";
             }
-            return outArr[outArr.Length - 2];
+
+            return matchedContent;
+
         }
 
     }
